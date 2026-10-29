@@ -1,0 +1,54 @@
+# Accounting and validation
+
+Read when changing code, investigating attribution or repairing a source/cache failure. Ordinary reports execute the validated helper without loading these internals.
+
+Read only approved sidebar and project metadata: `threads.id/name/project_id`, `projects.id/name`, `project_roots.project_id/path`, and the relevant local-only saved project definitions, exact ID migration mappings, explicit assignments and projectless flags. The report/metadata readers and model context must never read cached prompt-derived titles, messages, identities or remote-host metadata. The separately invoked native parser reads raw rollout JSON locally to extract numeric telemetry; its persistence transformations discard conversation text before database writes. Unknown or ambiguous paths produce a clear setup error; do not search unrelated files or guess another computer's source.
+
+## Counting and display
+
+
+The first import covers all available native history in verified, nonoverlapping chunks. It stores canonical session/day records and exact owner-to-chat relationships; never add overlapping old report totals together. Full raw folder keys stay distinct when basenames match. A selected chat includes its recorded agents; combined project/chat selection uses only their intersection.
+
+The project filter shows real named projects from current local Codex metadata. Exact project IDs and approved ID migration maps establish identity; do not join projects by similar names. Explicit per-chat assignments and projectless flags take precedence over folder containment; agents inherit only through core-verified lineage. Use the longest unambiguous verified project root for remaining folder slices. Generic task/output folders such as `vo` and `new-chat` are not project names. Keep unresolved or explicitly projectless usage visible as **No named project**, with source folders inspectable. Every original slice belongs to exactly one displayed group, and all five daily/overall counters remain unchanged. This is grouping by current recorded project metadata, not a reconstructed historical assignment timeline. Preserve raw source maps and cached numeric proof separately; refresh project labels/assignments without recounting usage.
+
+Every headline, daily value, ranking, owner, chat and CSV follows the chosen dates and scope. Multiple projects use a union of project slices, multiple chats a union of verified owner sets, and the two dimensions intersect. Deduplicate records and owners before aggregating. Comparison series show selected chats within the chosen projects, otherwise selected projects; their individual values never replace the deduplicated total. Python named-project projections use `project_metadata.project_report(..., projects=[...], chats=[...])`, matching browser grouping. Cached input remains included in input, and reasoning in output; never add them twice or repair upstream totals/subset discrepancies. Missing attribution disables the affected filter or ranking explicitly. Original recorded values and all five numeric fields remain intact.
+
+Dates use inclusive app-zone calendar days; individual views support 1–366 days, while the stored history may be longer. Browser Intl determines today, independently of the latest cached date. Missing dates mean no recorded usage, not confirmed zero. Recorded-zero rows remain distinct. Today stays partial; unsupported timezone/date metadata is disclosed, never guessed.
+
+Show the graph from two inclusive calendar days onward, or for multiple selected chats/projects on a single day. Use distinct stable colors and labelled exact values for comparisons. A single-day view without multiple comparison series keeps counters, model/project rankings, complete Chats, agent expansion, search and CSV and omits graph-only actions. Preserve English labels and en-US number formatting. Guardian reviews stay bundled, with stable readable aliases and recorded dates; optional technical details and CSV retain actual IDs/source labels.
+
+The dashboard omits explanatory scope/provenance paragraphs, the subset footer, scanner suffix and Report notes section. Preserve diagnostics in saved data and refresh results. **Stored or synced history is not verified execution on this device or by the currently selected account.** Do not infer account quota or credits.
+
+Query measurements are a separate projection, never another contribution to the shared report ledger. A complete result subtracts a verified starting counter from the counter through the same explicitly captured turn. Source identity, immutable initial byte prefixes, all five counters and matching completion markers are required. This version cannot prove exact dispatch-to-child-turn causality: manual registration and shared parent lineage leave delegated work partial, even when every dispatch was assigned. A running sample is provisional; checkpoint-only intervals and missing agent coverage must remain labelled. Missing telemetry is not a recorded zero. The post-completion observer, local sidecars and results use no model calls and remain outside the public bundle. See [query measurement](query-meter.md).
+
+## Cache reuse
+
+The local refresh helper retains the same import, conservation, source-snapshot and atomic publication gates as the launcher. The helper is bound to one verified setup and accepts only its canonical date/project/chat selection; it cannot change source paths through a browser request. Preserve one in-flight scan, stable selection, visible progress and last-good data on failure. Its HTTP listener is limited to loopback with a private capability path, exact host/origin validation and a required custom POST header. No CORS or public filesystem routes are needed. The parser and accounting remain offline; only the local browser/helper exchange uses HTTP.
+
+
+`<out>/usage-ledger.json` is the default canonical cache. `--cache-file <path>` chooses another writable local location. Reuse requires intact data/proof, matching source identity/revision including SQLite WAL, timezone and accounting version. Relevant sidebar labels and display freshness are updated without another full counter import. Changed native data triggers full local validation; historical values can change after imports, synchronization or corrections. `--refresh` explicitly forces revalidation.
+
+Existing legacy report-history files remain separate and are not summed, deleted or treated as current source data. Corrupt canonical cache bytes are preserved before replacement. A cache hit does not make a stale native cache current.
+
+## Batched Codex reporting
+
+`--codex-report` is orchestration around these same verified APIs. It does not change counting, owner/project attribution, cache conservation or publication. Validate dates/scope/timezone before meter/source work; resolve current chat only from its canonical execution environment. Reject ambiguous/unknown project selections rather than guessing a folder. A report failure stops without an automatic second scan or stale-total substitution. Optional request-meter failures remain separate from report success. The projection, selected URL and cutoff must be bound to the same published data/proof. Normal execution returns only compact selected counts/diagnostics/links; raw records stay local.
+
+## Validation and failures
+
+
+Exit 0 means successful generation; 2 means a report with explicit warnings; 1 means failure. On failure follow the stated local setup/source error. Do not fall back to raw logs or silently broaden scope. Legacy read-only mode keeps its native scan timestamp and warning. Offline mode stages its own marked database, verifies committed scan completion and all original accounting gates before atomic publication; a failed scan/validation/publication preserves the previous source, settings and report.
+
+The adapter targets Codex Usage Desktop v4.2.0, commit `6bd0eed7b108497aa50051580387345340e3167f`. Existing counter, daily/session/model/project reconciliation and parent/fork attribution checks remain mandatory on imports. Source revisions bracket imports to reject mixed concurrent snapshots; cached hits retain verified proofs.
+
+After code changes run the full Python suite (`python -B -X utf8 -m unittest discover -s <skill>/tests -v`), the browser projection tests, generated-dashboard checks and independent final review. Preserve already-passing checks on the same unchanged revision; routine viewing and refreshes do not repeat developer gates.
+
+Query-meter changes additionally preserve synthetic production-binary checks for explicit turn boundaries, numeric privacy, recorded-zero versus missing telemetry, source-prefix rewrites, concurrent appends, failed/interrupted turns, unregistered or mismatched agents, bounded hidden watching and post-response completion. Check the public packaged entry and embedded Python, not only an injected test adapter. Verify pending/final/partial browser states, exact large integers, filter independence and local sidecar updates; no test needs a real user's session.
+
+## Offline engine and dependency setup
+
+The native harness reuses the immutable upstream scanner/db counting implementation; its source, Git-blob hashes and narrow privacy/offline patches are bound by `native/upstream-manifest.json`. No desktop application, Tauri, account service or HTTP client is linked. Pricing uses the embedded upstream snapshot only; prices can be stale and are not quotas. The Python adapter never implements another rollout parser. Native SQL persistence removes prompt titles and search text, retaining only the five approved lineage fields for ownership.
+
+Setup downloads pinned, HTTPS-verified software and locked Rust crates into a user-local runtime. It does not install the desktop app or modify global PATH. Managed binary/source hashes are checked before reuse; completed reuse performs no download or compiler invocation. Include private IANA tzdata when the host lacks it. Source-only export uses the exact public upstream manifest, never native build directories or runtime state.
+
+In addition to the full Python/browser gates above, after native/bootstrap changes run all selected upstream Rust tests, the production binary tests, the normally ignored compression test with a synthetic fixture and genuine compressor, source/hash verification, and actual-engine Python integration fixtures. Test clean/missing-Python setup, repeat no-network reuse, Unicode/space paths, compressed/archived deduplication, five-counter/model/project/chat/agent reconciliation, independent recorded totals, home/timezone changes, failure rollback and exclusion of private text from database pages and exported reports. Keep an independent final review bound to the final source manifest. Do not repeat these developer gates during normal dashboard refresh.

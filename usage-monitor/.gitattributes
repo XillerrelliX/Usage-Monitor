@@ -1,0 +1,2 @@
+# Keep the byte-exact runtime and source manifests valid on every Git checkout.
+* -text

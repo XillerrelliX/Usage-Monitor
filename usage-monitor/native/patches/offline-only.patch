@@ -1,0 +1,163 @@
+--- a/upstream/pricing.rs
++++ b/generated/pricing.rs
+@@ -422,25 +422,7 @@
+ }
+ 
+ fn load_remote_pricing() -> Result<BTreeMap<String, LiteLlmModelPricing>, String> {
+-    let client = reqwest::blocking::Client::builder()
+-        .timeout(Duration::from_secs(5))
+-        .build()
+-        .map_err(|error| error.to_string())?;
+-    let response = client
+-        .get(LITELLM_PRICING_URL)
+-        .send()
+-        .map_err(|error| error.to_string())?;
+-    if !response.status().is_success() {
+-        return Err(format!(
+-            "Failed to fetch pricing data: {}",
+-            response.status()
+-        ));
+-    }
+-
+-    let raw = response
+-        .json::<BTreeMap<String, serde_json::Value>>()
+-        .map_err(|error| error.to_string())?;
+-    Ok(filter_chat_pricing(raw))
++    Err("Network pricing is disabled in codex-usage-offline".to_string())
+ }
+ 
+ fn filter_chat_pricing(
+--- a/upstream/session_replay.rs
++++ b/generated/session_replay.rs
+@@ -687,7 +687,7 @@
+             millis_timestamp("completed_at_ms").or(timestamp)
+         };
+         let workdir = string_field(item, "cwd").map(|cwd| {
+-            reqwest::Url::parse(&cwd)
++            url::Url::parse(&cwd)
+                 .ok()
+                 .and_then(|url| url.to_file_path().ok())
+                 .map(|path| path.to_string_lossy().into_owned())
+@@ -2378,7 +2378,7 @@
+     #[test]
+     fn merges_clock_sleep_completion_without_pairing_background_commands_or_losing_tokens() {
+         let records: Vec<Value> =
+-            serde_json::from_str(include_str!("../../e2e/fixtures/clock-sleep.json")).unwrap();
++            serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/upstream/e2e/fixtures/clock-sleep.json"))).unwrap();
+         let detail = parse_session_detail(
+             record("/tmp/sleep.jsonl"),
+             records
+@@ -2481,7 +2481,7 @@
+     #[test]
+     fn pairs_structured_commands_by_identity_even_when_they_finish_after_the_batch() {
+         let records: Vec<Value> = serde_json::from_str(include_str!(
+-            "../../e2e/fixtures/structured-command-responses.json"
++            concat!(env!("CARGO_MANIFEST_DIR"), "/upstream/e2e/fixtures/structured-command-responses.json")
+         ))
+         .unwrap();
+         let raw = std::iter::once(turn_context(
+@@ -2539,7 +2539,7 @@
+     #[test]
+     fn upserts_structured_ids_and_preserves_commands_without_an_outer_call() {
+         let workdir = std::env::temp_dir().join("repo").join("with space");
+-        let workdir_url = reqwest::Url::from_file_path(&workdir).unwrap();
++        let workdir_url = url::Url::from_file_path(&workdir).unwrap();
+         let command = |id: &str, output: &str, status: &str| {
+             event_msg(
+                 "2026-10-09T00:00:01.000Z",
+@@ -2629,7 +2629,7 @@
+     #[test]
+     fn preserves_mapped_commands_and_polls_from_reported_session() {
+         let records: Vec<Value> =
+-            serde_json::from_str(include_str!("../../e2e/fixtures/mixed-orchestration.json"))
++            serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/upstream/e2e/fixtures/mixed-orchestration.json")))
+                 .unwrap();
+         let raw = records
+             .iter()
+--- a/upstream/db.rs
++++ b/generated/db_offline.rs
+@@ -545,7 +545,7 @@
+                     rollup.modified_at_ms,
+                     rollup.size_bytes,
+                     rows_json,
+-                    rollup.prompt_title,
++                    Option::<String>::None,
+                     quota_usage_json,
+                     rollup.turn_count,
+                     QUOTA_PARSER_VERSION,
+--- a/upstream/project_sessions.rs
++++ b/generated/project_sessions_offline.rs
+@@ -164,8 +164,14 @@
+             session.path,
+             updated_at,
+             revision,
+-            serde_json::to_string(&detail).map_err(|error| error.to_string())?,
+-            search.join("\n").to_lowercase()
++            serde_json::to_string(&serde_json::json!({
++                "agentSessionId": detail.agent_session_id,
++                "parentSessionId": detail.parent_session_id,
++                "agentPath": detail.agent_path,
++                "agentNickname": detail.agent_nickname,
++                "agentRole": detail.agent_role
++            })).map_err(|error| error.to_string())?,
++            String::new()
+         ],
+     )
+     .map_err(|error| error.to_string())?;
+--- a/upstream/scanner.rs
++++ b/generated/scanner_query.rs
+@@ -2800,3 +2800,54 @@
+         assert_eq!(daily.cost_usd, session.cost_usd);
+     }
+ }
++
++// Appended by build.rs inside the unchanged upstream scanner module.
++// This adapter validates arithmetic before invoking the canonical functions;
++// it does not reproduce their counting, subset, or cumulative-reset rules.
++#[derive(Default)]
++pub(crate) struct QueryUsageCounter {
++    previous_totals: Option<RawUsage>,
++}
++
++impl QueryUsageCounter {
++    pub(crate) fn ingest(&mut self, info: &Value) -> Result<Option<[i64; 5]>, &'static str> {
++        fn validate(value: Option<&Value>) -> Result<(), &'static str> {
++            let Some(value) = value else { return Ok(()); };
++            if !value.is_object() { return Err("query_invalid_usage"); }
++            for key in ["input_tokens", "cached_input_tokens", "cache_read_input_tokens",
++                        "output_tokens", "reasoning_output_tokens", "total_tokens"] {
++                if let Some(number) = value.get(key) {
++                    if number.as_i64().is_none_or(|number| number < 0) {
++                        return Err("query_invalid_usage_number");
++                    }
++                }
++            }
++            if value.get("total_tokens").and_then(Value::as_i64).unwrap_or(0) == 0 {
++                value.get("input_tokens").and_then(Value::as_i64).unwrap_or(0)
++                    .checked_add(value.get("output_tokens").and_then(Value::as_i64).unwrap_or(0))
++                    .ok_or("query_numeric_overflow")?;
++            }
++            Ok(())
++        }
++        if !info.is_object() { return Err("query_invalid_usage"); }
++        validate(info.get("last_token_usage"))?;
++        validate(info.get("total_token_usage"))?;
++        let last_usage = normalize_raw_usage(info.get("last_token_usage"));
++        let total_usage = normalize_raw_usage(info.get("total_token_usage"));
++        let raw = last_usage.or_else(|| total_usage.as_ref()
++            .map(|current| subtract_raw_usage(current, self.previous_totals.as_ref())));
++        if let Some(total_usage) = total_usage { self.previous_totals = Some(total_usage); }
++        let Some(raw) = raw else { return Ok(None); };
++        if raw.total_tokens <= 0 {
++            raw.input_tokens.checked_add(raw.output_tokens).ok_or("query_numeric_overflow")?;
++        }
++        let usage = convert_to_delta(&raw);
++        // The canonical scanner intentionally ignores total-only telemetry.
++        if usage.input_tokens == 0 && usage.cached_input_tokens == 0
++            && usage.output_tokens == 0 && usage.reasoning_output_tokens == 0 {
++            return Ok(None);
++        }
++        Ok(Some([usage.input_tokens, usage.cached_input_tokens, usage.output_tokens,
++                 usage.reasoning_output_tokens, usage.total_tokens]))
++    }
++}

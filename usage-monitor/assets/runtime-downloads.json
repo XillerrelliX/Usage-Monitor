@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "rust_version": "1.90.0",
+  "rustup_version": "1.28.1",
+  "platforms": {
+    "macos-x86_64": {
+      "rustup": {
+        "host": "x86_64-apple-darwin",
+        "url": "https://static.rust-lang.org/rustup/archive/1.28.1/x86_64-apple-darwin/rustup-init",
+        "sha256": "e4b1f9ec613861232247e0cb6361c9bb1a86525d628ecd4b9feadc9ef9e0c228",
+        "checksum_source": "https://static.rust-lang.org/rustup/archive/1.28.1/x86_64-apple-darwin/rustup-init.sha256"
+      },
+      "python": {
+        "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261026/cpython-3.14.10%2B20261026-x86_64-apple-darwin-install_only_stripped.tar.gz",
+        "sha256": "2fd8becd48cf0ff5f0a15df3c0db7cae7aa708dcaacf901bd30d6cdd6229370b",
+        "checksum_source": "https://api.github.com/repos/astral-sh/python-build-standalone/releases/tags/20261026"
+      },
+      "compiler": {
+        "kind": "zig",
+        "url": "https://ziglang.org/download/0.14.1/zig-x86_64-macos-0.14.1.tar.xz",
+        "sha256": "b0f8bdfb9035783db58dd6c19d7dea89892acc3814421853e5752fe4573e5f43",
+        "checksum_source": "https://ziglang.org/download/index.json"
+      }
+    },
+    "macos-aarch64": {
+      "rustup": {
+        "host": "aarch64-apple-darwin",
+        "url": "https://static.rust-lang.org/rustup/archive/1.28.1/aarch64-apple-darwin/rustup-init",
+        "sha256": "966892cda29f0152315f5b4add9b865944c97d5573ae33855b8fc2c0d592ca5a",
+        "checksum_source": "https://static.rust-lang.org/rustup/archive/1.28.1/aarch64-apple-darwin/rustup-init.sha256"
+      },
+      "python": {
+        "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261026/cpython-3.14.10%2B20261026-aarch64-apple-darwin-install_only_stripped.tar.gz",
+        "sha256": "95eb8c87d16af37c54e9765e31d8c56c0d8ffa9968ea0f704f73a9b83f84e9f9",
+        "checksum_source": "https://api.github.com/repos/astral-sh/python-build-standalone/releases/tags/20261026"
+      },
+      "compiler": {
+        "kind": "zig",
+        "url": "https://ziglang.org/download/0.14.1/zig-aarch64-macos-0.14.1.tar.xz",
+        "sha256": "39f3dc5e79c22088ce878edc821dedb4ca5a1cd9f5ef915e9b3cc3053e8faefa",
+        "checksum_source": "https://ziglang.org/download/index.json"
+      }
+    },
+    "linux-x86_64": {
+      "rustup": {
+        "host": "x86_64-unknown-linux-gnu",
+        "url": "https://static.rust-lang.org/rustup/archive/1.28.1/x86_64-unknown-linux-gnu/rustup-init",
+        "sha256": "a3339fb004c3d0bb9862ba0bce001861fe5cbde9c10d16591eb3f39ee6cd3e7f",
+        "checksum_source": "https://static.rust-lang.org/rustup/archive/1.28.1/x86_64-unknown-linux-gnu/rustup-init.sha256"
+      },
+      "python": {
+        "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261026/cpython-3.14.10%2B20261026-x86_64-unknown-linux-gnu-install_only_stripped.tar.gz",
+        "sha256": "4d3c16c59ed0802a3d1d34d8bce504b15ceeaff39d62dadecc6a9fa803412aed",
+        "checksum_source": "https://api.github.com/repos/astral-sh/python-build-standalone/releases/tags/20261026"
+      },
+      "compiler": {
+        "kind": "zig",
+        "url": "https://ziglang.org/download/0.14.1/zig-x86_64-linux-0.14.1.tar.xz",
+        "sha256": "24aeeec8af16c381934a6cd7d95c807a8cb2cf7df9fa40d359aa884195c4716c",
+        "checksum_source": "https://ziglang.org/download/index.json"
+      }
+    },
+    "linux-aarch64": {
+      "rustup": {
+        "host": "aarch64-unknown-linux-gnu",
+        "url": "https://static.rust-lang.org/rustup/archive/1.28.1/aarch64-unknown-linux-gnu/rustup-init",
+        "sha256": "c64b33db2c6b9385817ec0e49a84bcfe018ed6e328fe755c3c809580cc70ce7a",
+        "checksum_source": "https://static.rust-lang.org/rustup/archive/1.28.1/aarch64-unknown-linux-gnu/rustup-init.sha256"
+      },
+      "python": {
+        "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261026/cpython-3.14.10%2B20261026-aarch64-unknown-linux-gnu-install_only_stripped.tar.gz",
+        "sha256": "90f48337bc3dd4ae6eda81e001e4c981236d403b6b5a07778bbdf94ee423dc00",
+        "checksum_source": "https://api.github.com/repos/astral-sh/python-build-standalone/releases/tags/20261026"
+      },
+      "compiler": {
+        "kind": "zig",
+        "url": "https://ziglang.org/download/0.14.1/zig-aarch64-linux-0.14.1.tar.xz",
+        "sha256": "f7a654acc967864f7a050ddacfaa778c7504a0eca8d2b678839c21eea47c992b",
+        "checksum_source": "https://ziglang.org/download/index.json"
+      }
+    },
+    "windows-x86_64": {
+      "rustup": {
+        "host": "x86_64-pc-windows-gnu",
+        "url": "https://static.rust-lang.org/rustup/archive/1.28.1/x86_64-pc-windows-gnu/rustup-init.exe",
+        "sha256": "f47cee05c484fb4dc89267e25f9f2f64e18ac5c03a72bec04d01d3b903a27c9b",
+        "checksum_source": "https://static.rust-lang.org/rustup/archive/1.28.1/x86_64-pc-windows-gnu/rustup-init.exe.sha256"
+      },
+      "compiler": {
+        "kind": "w64devkit",
+        "url": "https://github.com/skeeto/w64devkit/releases/download/v2.10.1/w64devkit-x64-2.10.1.7z.exe",
+        "sha256": "add1edf984ce4d473cfeb7c52e0ab38db73a855bba6c7f564d5e16648eb2896a",
+        "checksum_source": "https://api.github.com/repos/skeeto/w64devkit/releases/tags/v2.10.1"
+      },
+      "python": {
+        "url": "https://www.python.org/ftp/python/3.14.10/python-3.14.10-embed-amd64.zip",
+        "sha256": "90905e64a840557d8c1bc4f5b74db3d7ee85e3ffb217611cac1c7813acea4159",
+        "checksum_source": "https://www.python.org/ftp/python/3.14.10/python-3.14.10-embed-amd64.zip.spdx.json"
+      }
+    }
+  },
+  "python_minor": "3.14",
+  "timezone_data": {
+    "version": "2026.5",
+    "url": "https://files.pythonhosted.org/packages/94/21/1e5995a1c920cce14e4bffae20c665ec10e7ed03ab25e006cd741092b718/tzdata-2026.5-py2.py3-none-any.whl",
+    "sha256": "b683bd1b6659ddcd810ff02ad09ba821d4bf1065072805063eb35c49617905ac",
+    "checksum_source": "https://pypi.org/pypi/tzdata/2026.5/json"
+  }
+}

@@ -1,0 +1,13 @@
+# Generated build output and local-only state must not be committed.
+/dist/
+/.local/
+**/__pycache__/
+*.pyc
+/settings.json
+/dashboard/
+/offline-source.sqlite*
+/query-usage/
+/usage-monitor/settings.json
+/usage-monitor/dashboard/
+/usage-monitor/offline-source.sqlite*
+/usage-monitor/query-usage/

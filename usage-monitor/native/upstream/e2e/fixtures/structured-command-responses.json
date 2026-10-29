@@ -1,0 +1,157 @@
+[
+  {
+    "timestamp": "2026-10-09T12:00:01.000Z",
+    "type": "response_item",
+    "payload": {
+      "type": "custom_tool_call",
+      "name": "exec",
+      "call_id": "native-batch",
+      "input": "await Promise.allSettled([tools.exec_command({cmd:\"first-command\"}),tools.exec_command({cmd:\"second-command\"}),tools.exec_command({cmd:\"third-command\"})].map(async p=>text(await p)));"
+    }
+  },
+  {
+    "timestamp": "2026-10-09T12:00:02.000Z",
+    "type": "event_msg",
+    "payload": {
+      "type": "item_completed",
+      "turn_id": "native-turn",
+      "started_at_ms": 1791547201400,
+      "completed_at_ms": 1791547202000,
+      "item": {
+        "type": "CommandExecution",
+        "id": "exec-second",
+        "process_id": "42",
+        "command": [
+          "/bin/zsh",
+          "-lc",
+          "second-command"
+        ],
+        "cwd": "file:///native-response-test",
+        "status": "failed",
+        "stdout": "second response",
+        "stderr": "second error",
+        "aggregated_output": "second response\nsecond error",
+        "exit_code": 2
+      }
+    }
+  },
+  {
+    "timestamp": "2026-10-09T12:00:03.000Z",
+    "type": "event_msg",
+    "payload": {
+      "type": "item_completed",
+      "turn_id": "native-turn",
+      "started_at_ms": 1791547201200,
+      "completed_at_ms": 1791547203000,
+      "item": {
+        "type": "CommandExecution",
+        "id": "exec-first",
+        "process_id": "41",
+        "command": [
+          "/bin/zsh",
+          "-lc",
+          "first-command"
+        ],
+        "cwd": "file:///native-response-test",
+        "status": "completed",
+        "aggregated_output": "first response line 1\nfirst response line 2\nfirst response line 3\nfirst response line 4\nfirst response line 5\nfirst response line 6\nfirst response line 7\nfirst response line 8",
+        "exit_code": 0
+      }
+    }
+  },
+  {
+    "timestamp": "2026-10-09T12:00:04.000Z",
+    "type": "response_item",
+    "payload": {
+      "type": "custom_tool_call_output",
+      "call_id": "native-batch",
+      "output": [
+        {
+          "type": "input_text",
+          "text": "Script completed\nWall time 3 seconds\nOutput:\n"
+        },
+        {
+          "type": "input_text",
+          "text": "{\"exit_code\": 2, \"output\": \"second response\", \"stderr\": \"second error\"}"
+        },
+        {
+          "type": "input_text",
+          "text": "{\"exit_code\": 0, \"output\": \"first printed preview\"}"
+        },
+        {
+          "type": "input_text",
+          "text": "{\"session_id\": 43, \"output\": \"third command started\"}"
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-10-09T12:00:05.000Z",
+    "type": "event_msg",
+    "payload": {
+      "type": "token_count",
+      "info": {
+        "last_token_usage": {
+          "input_tokens": 1000,
+          "cached_input_tokens": 200,
+          "output_tokens": 300,
+          "total_tokens": 1300
+        },
+        "total_token_usage": {
+          "input_tokens": 1000,
+          "cached_input_tokens": 200,
+          "output_tokens": 300,
+          "total_tokens": 1300
+        }
+      }
+    }
+  },
+  {
+    "timestamp": "2026-10-09T12:00:06.000Z",
+    "type": "response_item",
+    "payload": {
+      "type": "custom_tool_call",
+      "name": "exec",
+      "call_id": "native-poll",
+      "input": "text(await tools.write_stdin({session_id:43,chars:\"\"}));"
+    }
+  },
+  {
+    "timestamp": "2026-10-09T12:00:07.000Z",
+    "type": "event_msg",
+    "payload": {
+      "type": "item_completed",
+      "turn_id": "native-turn",
+      "started_at_ms": 1791547201600,
+      "completed_at_ms": 1791547207000,
+      "item": {
+        "type": "CommandExecution",
+        "id": "exec-third",
+        "process_id": "43",
+        "command": [
+          "/bin/zsh",
+          "-lc",
+          "third-command"
+        ],
+        "cwd": "file:///native-response-test",
+        "status": "completed",
+        "aggregated_output": "third command finished",
+        "exit_code": 0
+      }
+    }
+  },
+  {
+    "timestamp": "2026-10-09T12:00:08.000Z",
+    "type": "response_item",
+    "payload": {
+      "type": "custom_tool_call_output",
+      "call_id": "native-poll",
+      "output": [
+        {
+          "type": "input_text",
+          "text": "{\"exit_code\": 0, \"output\": \"third command finished\"}"
+        }
+      ]
+    }
+  }
+]

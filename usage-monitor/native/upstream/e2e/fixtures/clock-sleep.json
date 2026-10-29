@@ -1,0 +1,158 @@
+[
+  {
+    "timestamp": "2026-10-10T18:28:33.180Z",
+    "type": "turn_context",
+    "payload": {
+      "turn_id": "01a126f7-2937-7de2-b986-4c40b272996a",
+      "model": "gpt-6"
+    }
+  },
+  {
+    "timestamp": "2026-10-10T18:28:33.180Z",
+    "ordinal": 847,
+    "type": "response_item",
+    "payload": {
+      "type": "function_call",
+      "id": "fc_027e1d78e2270301016aca83d0ea708199b5fa371b89ee8fee",
+      "name": "sleep",
+      "namespace": "clock",
+      "arguments": "{\"duration_ms\":20000}",
+      "call_id": "call_0Ur6F9JcuFSTucy73TEYF1qx",
+      "internal_chat_message_metadata_passthrough": {
+        "turn_id": "01a126f7-2937-7de2-b986-4c40b272996a",
+        "create_time": 1791656891.903857
+      }
+    },
+    "metadata": {
+      "client_authored": false,
+      "user_input_order": 28
+    }
+  },
+  {
+    "timestamp": "2026-10-10T18:28:39.046Z",
+    "ordinal": 849,
+    "type": "event_msg",
+    "payload": {
+      "type": "item_completed",
+      "thread_id": "01a126bd-461d-7dd0-a170-d6473e503b4d",
+      "turn_id": "01a126f7-2937-7de2-b986-4c40b272996a",
+      "item": {
+        "type": "CommandExecution",
+        "id": "exec-dc6f2911-6e8e-44a5-8cf1-3c74664fdfcb",
+        "process_id": "48803",
+        "command": [
+          "/bin/zsh",
+          "-lc",
+          "background-test-command"
+        ],
+        "cwd": "file:///clock-sleep-test",
+        "parsed_cmd": [
+          {
+            "type": "unknown",
+            "cmd": "background-test-command"
+          }
+        ],
+        "source": "unified_exec_startup",
+        "status": "completed",
+        "stdout": "",
+        "stderr": "",
+        "aggregated_output": "",
+        "exit_code": 0,
+        "duration": {
+          "secs": 61,
+          "nanos": 406515302
+        },
+        "formatted_output": ""
+      },
+      "started_at_ms": 1791656857638,
+      "completed_at_ms": 1791656919046
+    }
+  },
+  {
+    "timestamp": "2026-10-10T18:28:53.209Z",
+    "ordinal": 850,
+    "type": "event_msg",
+    "payload": {
+      "type": "item_completed",
+      "thread_id": "01a126bd-461d-7dd0-a170-d6473e503b4d",
+      "turn_id": "01a126f7-2937-7de2-b986-4c40b272996a",
+      "item": {
+        "type": "Extension",
+        "kind": "clock.sleep",
+        "id": "call_0Ur6F9JcuFSTucy73TEYF1qx",
+        "durationMs": 20000
+      },
+      "started_at_ms": 1791656913185,
+      "completed_at_ms": 1791656933209
+    }
+  },
+  {
+    "timestamp": "2026-10-10T18:28:53.256Z",
+    "ordinal": 851,
+    "type": "response_item",
+    "payload": {
+      "type": "function_call_output",
+      "id": "fco_01a12713-3788-7b12-8b77-50b87791b8d4",
+      "call_id": "call_0Ur6F9JcuFSTucy73TEYF1qx",
+      "output": "Wall time: 20.0673 seconds\nSleep completed.",
+      "internal_chat_message_metadata_passthrough": {
+        "turn_id": "01a126f7-2937-7de2-b986-4c40b272996a",
+        "create_time": 1791656933.256362
+      }
+    },
+    "metadata": {
+      "client_authored": false,
+      "fallback_token_limit_override": 12000
+    }
+  },
+  {
+    "timestamp": "2026-10-10T18:28:53.262Z",
+    "ordinal": 852,
+    "type": "event_msg",
+    "payload": {
+      "type": "token_count",
+      "info": {
+        "total_token_usage": {
+          "input_tokens": 9561625,
+          "cached_input_tokens": 9141376,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 62692,
+          "reasoning_output_tokens": 30669,
+          "total_tokens": 9624317
+        },
+        "last_token_usage": {
+          "input_tokens": 81764,
+          "cached_input_tokens": 80768,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 537,
+          "reasoning_output_tokens": 516,
+          "total_tokens": 82301
+        },
+        "model_context_window": 258400
+      },
+      "rate_limits": {
+        "limit_id": "codex",
+        "limit_name": null,
+        "primary": {
+          "used_percent": 32.0,
+          "window_minutes": 300,
+          "resets_at": 1791666500
+        },
+        "secondary": {
+          "used_percent": 43.0,
+          "window_minutes": 10080,
+          "resets_at": 1791953948
+        },
+        "credits": {
+          "has_credits": false,
+          "unlimited": false,
+          "balance": "0"
+        },
+        "individual_limit": null,
+        "spend_control_reached": null,
+        "plan_type": "plus",
+        "rate_limit_reached_type": null
+      }
+    }
+  }
+]

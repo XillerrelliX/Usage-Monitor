@@ -1,0 +1,2 @@
+# Public payload manifests require exact bytes on every checkout.
+* -text

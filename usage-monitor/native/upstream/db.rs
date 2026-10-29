@@ -1,0 +1,1276 @@
+use crate::pricing::{calculate_cost_usd, PricingSource};
+use crate::types::{
+    DailyUsageRow, ModelUsage, ProjectUsage, SessionDailyUsageRow, SessionDetailRow,
+    SessionQuotaUsage,
+};
+use rusqlite::{params, Connection};
+use serde::{Deserialize, Serialize};
+use std::{collections::BTreeMap, path::Path};
+
+const QUOTA_PARSER_VERSION: i64 = 4;
+
+pub fn open_database(database_path: &Path) -> Result<Connection, String> {
+    let db = Connection::open(database_path).map_err(|error| error.to_string())?;
+    db.pragma_update(None, "journal_mode", "WAL")
+        .map_err(|error| error.to_string())?;
+    db.pragma_update(None, "synchronous", "NORMAL")
+        .map_err(|error| error.to_string())?;
+    db.execute_batch(
+        r#"
+        CREATE TABLE IF NOT EXISTS daily_usage_rollups (
+          date TEXT PRIMARY KEY,
+          input_tokens INTEGER NOT NULL,
+          cached_input_tokens INTEGER NOT NULL,
+          output_tokens INTEGER NOT NULL,
+          reasoning_output_tokens INTEGER NOT NULL,
+          total_tokens INTEGER NOT NULL,
+          cost_usd REAL NOT NULL,
+          models_json TEXT NOT NULL,
+          projects_json TEXT NOT NULL DEFAULT '{}',
+          updated_at TEXT NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS scan_runs (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          scanned_at TEXT NOT NULL,
+          timezone TEXT NOT NULL,
+          imported_days INTEGER NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS session_file_rollups (
+          path TEXT PRIMARY KEY,
+          modified_at_ms INTEGER NOT NULL,
+          size_bytes INTEGER NOT NULL,
+          rows_json TEXT NOT NULL,
+          prompt_title TEXT,
+          turn_count INTEGER NOT NULL DEFAULT 0,
+          quota_usage_json TEXT,
+          quota_parser_version INTEGER NOT NULL DEFAULT 0,
+          updated_at TEXT NOT NULL
+        );
+        "#,
+    )
+    .map_err(|error| error.to_string())?;
+    ensure_column(
+        &db,
+        "daily_usage_rollups",
+        "projects_json",
+        "ALTER TABLE daily_usage_rollups ADD COLUMN projects_json TEXT NOT NULL DEFAULT '{}'",
+    )?;
+    ensure_column(
+        &db,
+        "session_file_rollups",
+        "quota_usage_json",
+        "ALTER TABLE session_file_rollups ADD COLUMN quota_usage_json TEXT",
+    )?;
+    ensure_column(
+        &db,
+        "session_file_rollups",
+        "prompt_title",
+        "ALTER TABLE session_file_rollups ADD COLUMN prompt_title TEXT",
+    )?;
+    ensure_column(
+        &db,
+        "session_file_rollups",
+        "quota_parser_version",
+        "ALTER TABLE session_file_rollups ADD COLUMN quota_parser_version INTEGER NOT NULL DEFAULT 0",
+    )?;
+    ensure_column(
+        &db,
+        "session_file_rollups",
+        "turn_count",
+        "ALTER TABLE session_file_rollups ADD COLUMN turn_count INTEGER NOT NULL DEFAULT 0",
+    )?;
+    crate::project_sessions::create_tables(&db)?;
+    Ok(db)
+}
+
+#[derive(Debug, Clone)]
+pub struct SessionFileRollup {
+    pub path: String,
+    pub modified_at_ms: i64,
+    pub size_bytes: i64,
+    pub rows: Vec<DailyUsageRow>,
+    pub prompt_title: Option<String>,
+    pub turn_count: usize,
+    pub quota_usage: Option<SessionQuotaRollup>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct SessionQuotaRollup {
+    pub session: SessionQuotaUsage,
+    pub daily: BTreeMap<String, SessionQuotaUsage>,
+    #[serde(default)]
+    pub model_samples: Vec<ModelQuotaSample>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ModelQuotaSample {
+    pub date: String,
+    pub model: String,
+    pub window_minutes: i64,
+    pub observed_start_at: String,
+    pub observed_end_at: String,
+    pub tokens: i64,
+    pub observed_delta_percent: f64,
+}
+
+#[derive(Debug, Default)]
+pub struct ModelQuotaAggregate {
+    pub tokens: i64,
+    pub observed_percent: f64,
+    pub samples: i64,
+}
+
+pub fn query_model_quota_samples(
+    db: &Connection,
+    start_date: &str,
+    end_date: &str,
+) -> Result<BTreeMap<(String, i64), ModelQuotaAggregate>, String> {
+    let mut statement = db
+        .prepare(
+            "SELECT quota_usage_json FROM session_file_rollups WHERE quota_usage_json IS NOT NULL",
+        )
+        .map_err(|error| error.to_string())?;
+    let rows = statement
+        .query_map([], |row| row.get::<_, String>(0))
+        .map_err(|error| error.to_string())?;
+    let mut samples_by_window = BTreeMap::<i64, Vec<ModelQuotaSample>>::new();
+    for row in rows {
+        let usage: SessionQuotaRollup =
+            serde_json::from_str(&row.map_err(|error| error.to_string())?)
+                .map_err(|error| error.to_string())?;
+        for sample in usage.model_samples {
+            samples_by_window
+                .entry(sample.window_minutes)
+                .or_default()
+                .push(sample);
+        }
+    }
+    let mut totals = BTreeMap::<(String, i64), ModelQuotaAggregate>::new();
+    for (window_minutes, mut samples) in samples_by_window {
+        samples.sort_by(|left, right| left.observed_start_at.cmp(&right.observed_start_at));
+        let mut index = 0;
+        while index < samples.len() {
+            let mut next = index + 1;
+            let mut latest_end = samples[index].observed_end_at.as_str();
+            while next < samples.len() && samples[next].observed_start_at.as_str() < latest_end {
+                latest_end = latest_end.max(samples[next].observed_end_at.as_str());
+                next += 1;
+            }
+            if next == index + 1 {
+                let sample = &samples[index];
+                if sample.date.as_str() >= start_date && sample.date.as_str() <= end_date {
+                    let total = totals
+                        .entry((sample.model.clone(), window_minutes))
+                        .or_default();
+                    total.tokens += sample.tokens;
+                    total.observed_percent += sample.observed_delta_percent;
+                    total.samples += 1;
+                }
+            }
+            index = next;
+        }
+    }
+    Ok(totals)
+}
+
+#[derive(Debug, Clone)]
+pub struct SessionRollupRecord {
+    pub path: String,
+    pub modified_at_ms: i64,
+    pub size_bytes: i64,
+    pub rows: Vec<DailyUsageRow>,
+    pub prompt_title: Option<String>,
+}
+
+#[derive(Debug, Clone)]
+pub struct SessionHierarchyRecord {
+    pub path: String,
+    pub prompt_title: Option<String>,
+    pub input_tokens: i64,
+    pub cached_input_tokens: i64,
+    pub output_tokens: i64,
+    pub cost_usd: f64,
+}
+
+fn ensure_column(
+    db: &Connection,
+    table: &str,
+    column: &str,
+    alter_statement: &str,
+) -> Result<(), String> {
+    let mut statement = db
+        .prepare(&format!("PRAGMA table_info({table})"))
+        .map_err(|error| error.to_string())?;
+    let columns = statement
+        .query_map([], |row| row.get::<_, String>(1))
+        .map_err(|error| error.to_string())?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|error| error.to_string())?;
+
+    if !columns.iter().any(|name| name == column) {
+        db.execute(alter_statement, [])
+            .map_err(|error| error.to_string())?;
+    }
+
+    Ok(())
+}
+
+pub fn upsert_daily_rows(db: &Connection, rows: &[DailyUsageRow]) -> Result<(), String> {
+    let transaction = if db.is_autocommit() {
+        Some(
+            db.unchecked_transaction()
+                .map_err(|error| error.to_string())?,
+        )
+    } else {
+        None
+    };
+    let tx = transaction.as_deref().unwrap_or(db);
+    {
+        let mut statement = tx
+            .prepare(
+                r#"
+                INSERT INTO daily_usage_rollups (
+                  date,
+                  input_tokens,
+                  cached_input_tokens,
+                  output_tokens,
+                  reasoning_output_tokens,
+                  total_tokens,
+                  cost_usd,
+                  models_json,
+                  projects_json,
+                  updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(date) DO UPDATE SET
+                  input_tokens = excluded.input_tokens,
+                  cached_input_tokens = excluded.cached_input_tokens,
+                  output_tokens = excluded.output_tokens,
+                  reasoning_output_tokens = excluded.reasoning_output_tokens,
+                  total_tokens = excluded.total_tokens,
+                  cost_usd = excluded.cost_usd,
+                  models_json = excluded.models_json,
+                  projects_json = excluded.projects_json,
+                  updated_at = excluded.updated_at
+                "#,
+            )
+            .map_err(|error| error.to_string())?;
+
+        for row in rows {
+            let models_json =
+                serde_json::to_string(&row.models).map_err(|error| error.to_string())?;
+            let projects_json =
+                serde_json::to_string(&row.projects).map_err(|error| error.to_string())?;
+            statement
+                .execute(params![
+                    row.date,
+                    row.input_tokens,
+                    row.cached_input_tokens,
+                    row.output_tokens,
+                    row.reasoning_output_tokens,
+                    row.total_tokens,
+                    row.cost_usd,
+                    models_json,
+                    projects_json,
+                    row.updated_at
+                ])
+                .map_err(|error| error.to_string())?;
+        }
+    }
+    if let Some(transaction) = transaction {
+        transaction.commit().map_err(|error| error.to_string())?;
+    }
+    Ok(())
+}
+
+pub fn record_scan_run(
+    db: &Connection,
+    scanned_at: &str,
+    timezone: &str,
+    imported_days: usize,
+) -> Result<(), String> {
+    db.execute(
+        "INSERT INTO scan_runs (scanned_at, timezone, imported_days) VALUES (?, ?, ?)",
+        params![scanned_at, timezone, imported_days as i64],
+    )
+    .map_err(|error| error.to_string())?;
+    Ok(())
+}
+
+pub fn reset_usage_state(db: &Connection) -> Result<(), String> {
+    db.execute_batch(
+        r#"
+        DELETE FROM daily_usage_rollups;
+        DELETE FROM session_file_rollups;
+        DELETE FROM scan_runs;
+        DELETE FROM project_session_days;
+        DELETE FROM project_session_index;
+        DELETE FROM project_session_quota;
+        "#,
+    )
+    .map_err(|error| error.to_string())
+}
+
+pub fn delete_missing_daily_rows(db: &Connection, active_dates: &[String]) -> Result<(), String> {
+    if active_dates.is_empty() {
+        db.execute("DELETE FROM daily_usage_rollups", [])
+            .map_err(|error| error.to_string())?;
+        return Ok(());
+    }
+
+    let mut statement = db
+        .prepare("SELECT date FROM daily_usage_rollups")
+        .map_err(|error| error.to_string())?;
+    let cached_dates = statement
+        .query_map([], |row| row.get::<_, String>(0))
+        .map_err(|error| error.to_string())?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|error| error.to_string())?;
+
+    for cached_date in cached_dates {
+        if !active_dates.iter().any(|date| date == &cached_date) {
+            db.execute(
+                "DELETE FROM daily_usage_rollups WHERE date = ?",
+                params![cached_date],
+            )
+            .map_err(|error| error.to_string())?;
+        }
+    }
+
+    Ok(())
+}
+
+pub fn query_session_file_rollup(
+    db: &Connection,
+    path: &str,
+    modified_at_ms: i64,
+    size_bytes: i64,
+) -> Result<Option<SessionFileRollup>, String> {
+    let result = db.query_row(
+        r#"
+        SELECT rows_json, prompt_title, quota_usage_json, turn_count
+        FROM session_file_rollups
+        WHERE path = ? AND modified_at_ms = ? AND size_bytes = ? AND quota_parser_version = ?
+        "#,
+        params![path, modified_at_ms, size_bytes, QUOTA_PARSER_VERSION],
+        |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, Option<String>>(1)?,
+                row.get::<_, Option<String>>(2)?,
+                row.get::<_, usize>(3)?,
+            ))
+        },
+    );
+
+    match result {
+        Ok((rows_json, prompt_title, quota_usage_json, turn_count)) => {
+            let rows = serde_json::from_str(&rows_json).map_err(|error| error.to_string())?;
+            let quota_usage = quota_usage_json
+                .map(|json| serde_json::from_str(&json).map_err(|error| error.to_string()))
+                .transpose()?;
+            Ok(Some(SessionFileRollup {
+                path: path.to_string(),
+                modified_at_ms,
+                size_bytes,
+                rows,
+                prompt_title,
+                turn_count,
+                quota_usage,
+            }))
+        }
+        Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+        Err(error) => Err(error.to_string()),
+    }
+}
+
+pub fn query_all_session_file_rollups(db: &Connection) -> Result<Vec<SessionFileRollup>, String> {
+    let mut statement = db.prepare("SELECT path, modified_at_ms, size_bytes, rows_json, prompt_title, quota_usage_json, turn_count FROM session_file_rollups")
+        .map_err(|error| error.to_string())?;
+    let records = statement
+        .query_map([], |row| {
+            Ok((
+                row.get::<_, String>(0)?,
+                row.get::<_, i64>(1)?,
+                row.get::<_, i64>(2)?,
+                row.get::<_, String>(3)?,
+                row.get::<_, Option<String>>(4)?,
+                row.get::<_, Option<String>>(5)?,
+                row.get::<_, usize>(6)?,
+            ))
+        })
+        .map_err(|error| error.to_string())?;
+    records
+        .map(|record| {
+            let (path, modified_at_ms, size_bytes, rows_json, prompt_title, quota_json, turn_count) =
+                record.map_err(|error| error.to_string())?;
+            Ok(SessionFileRollup {
+                path,
+                modified_at_ms,
+                size_bytes,
+                prompt_title,
+                turn_count,
+                rows: serde_json::from_str(&rows_json).map_err(|error| error.to_string())?,
+                quota_usage: quota_json
+                    .map(|json| serde_json::from_str(&json).map_err(|error| error.to_string()))
+                    .transpose()?,
+            })
+        })
+        .collect()
+}
+
+pub fn query_session_rollup_record(
+    db: &Connection,
+    path: &str,
+) -> Result<Option<SessionRollupRecord>, String> {
+    let result = db.query_row(
+        r#"
+        SELECT path, modified_at_ms, size_bytes, rows_json, prompt_title
+        FROM session_file_rollups
+        WHERE path = ?
+        "#,
+        params![path],
+        |row| {
+            let rows_json: String = row.get(3)?;
+            let rows = serde_json::from_str::<Vec<DailyUsageRow>>(&rows_json).unwrap_or_default();
+
+            Ok(SessionRollupRecord {
+                path: row.get(0)?,
+                modified_at_ms: row.get(1)?,
+                size_bytes: row.get(2)?,
+                rows,
+                prompt_title: row.get(4)?,
+            })
+        },
+    );
+
+    match result {
+        Ok(record) => Ok(Some(record)),
+        Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+        Err(error) => Err(error.to_string()),
+    }
+}
+
+pub fn query_session_hierarchy_records(
+    db: &Connection,
+) -> Result<Vec<SessionHierarchyRecord>, String> {
+    let mut statement = db
+        .prepare(
+            r#"
+            SELECT path, prompt_title, rows_json
+            FROM session_file_rollups
+            "#,
+        )
+        .map_err(|error| error.to_string())?;
+    let rows = statement
+        .query_map([], |row| {
+            let rows_json: String = row.get(2)?;
+            let usage_rows =
+                serde_json::from_str::<Vec<DailyUsageRow>>(&rows_json).unwrap_or_default();
+            Ok(SessionHierarchyRecord {
+                path: row.get(0)?,
+                prompt_title: row.get(1)?,
+                input_tokens: usage_rows.iter().map(|usage| usage.input_tokens).sum(),
+                cached_input_tokens: usage_rows
+                    .iter()
+                    .map(|usage| usage.cached_input_tokens)
+                    .sum(),
+                output_tokens: usage_rows.iter().map(|usage| usage.output_tokens).sum(),
+                cost_usd: usage_rows.iter().map(|usage| usage.cost_usd).sum(),
+            })
+        })
+        .map_err(|error| error.to_string())?;
+
+    rows.collect::<Result<Vec<_>, _>>()
+        .map_err(|error| error.to_string())
+}
+
+pub fn upsert_session_file_rollups(
+    db: &Connection,
+    rollups: &[SessionFileRollup],
+    updated_at: &str,
+) -> Result<(), String> {
+    let transaction = if db.is_autocommit() {
+        Some(
+            db.unchecked_transaction()
+                .map_err(|error| error.to_string())?,
+        )
+    } else {
+        None
+    };
+    let tx = transaction.as_deref().unwrap_or(db);
+    {
+        let mut statement = tx
+            .prepare(
+                r#"
+                INSERT INTO session_file_rollups (
+                  path,
+                  modified_at_ms,
+                  size_bytes,
+                  rows_json,
+                  prompt_title,
+                  quota_usage_json,
+                  turn_count,
+                  quota_parser_version,
+                  updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(path) DO UPDATE SET
+                  modified_at_ms = excluded.modified_at_ms,
+                  size_bytes = excluded.size_bytes,
+                  rows_json = excluded.rows_json,
+                  prompt_title = excluded.prompt_title,
+                  quota_usage_json = excluded.quota_usage_json,
+                  turn_count = excluded.turn_count,
+                  quota_parser_version = excluded.quota_parser_version,
+                  updated_at = excluded.updated_at
+                "#,
+            )
+            .map_err(|error| error.to_string())?;
+
+        for rollup in rollups {
+            let rows_json =
+                serde_json::to_string(&rollup.rows).map_err(|error| error.to_string())?;
+            let quota_usage_json = rollup
+                .quota_usage
+                .as_ref()
+                .map(serde_json::to_string)
+                .transpose()
+                .map_err(|error| error.to_string())?;
+            statement
+                .execute(params![
+                    rollup.path,
+                    rollup.modified_at_ms,
+                    rollup.size_bytes,
+                    rows_json,
+                    rollup.prompt_title,
+                    quota_usage_json,
+                    rollup.turn_count,
+                    QUOTA_PARSER_VERSION,
+                    updated_at
+                ])
+                .map_err(|error| error.to_string())?;
+        }
+    }
+    if let Some(transaction) = transaction {
+        transaction.commit().map_err(|error| error.to_string())?;
+    }
+    Ok(())
+}
+
+pub fn delete_missing_session_file_rollups(
+    db: &Connection,
+    active_paths: &[String],
+) -> Result<(), String> {
+    if active_paths.is_empty() {
+        db.execute("DELETE FROM session_file_rollups", [])
+            .map_err(|error| error.to_string())?;
+        return Ok(());
+    }
+
+    let mut statement = db
+        .prepare("SELECT path FROM session_file_rollups")
+        .map_err(|error| error.to_string())?;
+    let cached_paths = statement
+        .query_map([], |row| row.get::<_, String>(0))
+        .map_err(|error| error.to_string())?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|error| error.to_string())?;
+
+    for cached_path in cached_paths {
+        if !active_paths.iter().any(|path| path == &cached_path) {
+            db.execute(
+                "DELETE FROM session_file_rollups WHERE path = ?",
+                params![cached_path],
+            )
+            .map_err(|error| error.to_string())?;
+        }
+    }
+
+    Ok(())
+}
+
+pub fn query_daily_rows(
+    db: &Connection,
+    start_date: &str,
+    end_date: &str,
+) -> Result<Vec<DailyUsageRow>, String> {
+    let mut statement = db
+        .prepare(
+            r#"
+            SELECT
+              date,
+              input_tokens,
+              cached_input_tokens,
+              output_tokens,
+              reasoning_output_tokens,
+              total_tokens,
+              cost_usd,
+              models_json,
+              projects_json,
+              updated_at
+            FROM daily_usage_rollups
+            WHERE date BETWEEN ? AND ?
+            ORDER BY date ASC
+            "#,
+        )
+        .map_err(|error| error.to_string())?;
+
+    let rows = statement
+        .query_map(params![start_date, end_date], |row| {
+            let models_json: String = row.get(7)?;
+            let projects_json: String = row.get(8)?;
+            let models = serde_json::from_str::<BTreeMap<String, ModelUsage>>(&models_json)
+                .unwrap_or_default();
+            let projects = serde_json::from_str::<BTreeMap<String, ProjectUsage>>(&projects_json)
+                .unwrap_or_default();
+
+            Ok(DailyUsageRow {
+                date: row.get(0)?,
+                input_tokens: row.get(1)?,
+                cached_input_tokens: row.get(2)?,
+                output_tokens: row.get(3)?,
+                reasoning_output_tokens: row.get(4)?,
+                total_tokens: row.get(5)?,
+                cost_usd: row.get(6)?,
+                models,
+                projects,
+                updated_at: row.get(9)?,
+            })
+        })
+        .map_err(|error| error.to_string())?;
+
+    rows.collect::<Result<Vec<_>, _>>()
+        .map_err(|error| error.to_string())
+}
+
+pub fn query_all_daily_rows(db: &Connection) -> Result<Vec<DailyUsageRow>, String> {
+    let bounds = db
+        .query_row(
+            "SELECT MIN(date), MAX(date) FROM daily_usage_rollups",
+            [],
+            |row| {
+                Ok((
+                    row.get::<_, Option<String>>(0)?,
+                    row.get::<_, Option<String>>(1)?,
+                ))
+            },
+        )
+        .map_err(|error| error.to_string())?;
+    match bounds {
+        (Some(start), Some(end)) => query_daily_rows(db, &start, &end),
+        _ => Ok(Vec::new()),
+    }
+}
+
+pub fn pricing_models(db: &Connection) -> Result<Vec<String>, String> {
+    Ok(query_all_daily_rows(db)?
+        .into_iter()
+        .flat_map(|row| row.models.into_keys())
+        .collect::<std::collections::BTreeSet<_>>()
+        .into_iter()
+        .collect())
+}
+
+pub fn recalculate_daily_costs(
+    db: &mut Connection,
+    pricing_source: &PricingSource,
+) -> Result<(), String> {
+    let _guard = crate::scanner::SCAN_MUTEX
+        .lock()
+        .map_err(|error| error.to_string())?;
+    let rows = query_all_daily_rows(db)?;
+    let tx = db.transaction().map_err(|error| error.to_string())?;
+    {
+        let mut statement = tx
+            .prepare("UPDATE daily_usage_rollups SET cost_usd = ? WHERE date = ?")
+            .map_err(|error| error.to_string())?;
+        for row in rows {
+            let cost = row
+                .models
+                .iter()
+                .map(|(model, usage)| {
+                    calculate_cost_usd(usage, pricing_source.pricing_for_model(model))
+                })
+                .sum::<f64>();
+            statement
+                .execute(params![cost, row.date])
+                .map_err(|error| error.to_string())?;
+        }
+    }
+    tx.commit().map_err(|error| error.to_string())
+}
+
+pub fn query_latest_update_at(db: &Connection) -> Result<Option<String>, String> {
+    db.query_row(
+        "SELECT MAX(updated_at) AS updated_at FROM daily_usage_rollups",
+        [],
+        |row| row.get(0),
+    )
+    .map_err(|error| error.to_string())
+}
+
+pub fn query_daily_quota_percents(
+    db: &Connection,
+    start_date: &str,
+    end_date: &str,
+) -> Result<BTreeMap<String, (Option<f64>, Option<f64>)>, String> {
+    let mut statement = db
+        .prepare(
+            "SELECT quota_usage_json FROM session_file_rollups WHERE quota_usage_json IS NOT NULL",
+        )
+        .map_err(|error| error.to_string())?;
+    let rollups = statement
+        .query_map([], |row| row.get::<_, String>(0))
+        .map_err(|error| error.to_string())?;
+    let mut windows = BTreeMap::<(String, bool, Option<String>), (f64, f64)>::new();
+
+    for json in rollups {
+        let json = json.map_err(|error| error.to_string())?;
+        let Ok(rollup) = serde_json::from_str::<SessionQuotaRollup>(&json) else {
+            continue;
+        };
+        for (date, usage) in rollup.daily {
+            if date.as_str() < start_date || date.as_str() > end_date {
+                continue;
+            }
+            for (is_five_hour, group) in [(true, usage.five_hour), (false, usage.weekly)] {
+                for window in group {
+                    let entry = windows
+                        .entry((date.clone(), is_five_hour, window.resets_at))
+                        .or_insert((window.observed_start_percent, window.observed_end_percent));
+                    entry.0 = entry.0.min(window.observed_start_percent);
+                    entry.1 = entry.1.max(window.observed_end_percent);
+                }
+            }
+        }
+    }
+
+    let mut daily = BTreeMap::<String, (Option<f64>, Option<f64>)>::new();
+    for ((date, is_five_hour, _), (start, end)) in windows {
+        let entry = daily.entry(date).or_default();
+        let percent = if is_five_hour {
+            &mut entry.0
+        } else {
+            &mut entry.1
+        };
+        *percent = Some(percent.unwrap_or(0.0) + (end - start).max(0.0));
+    }
+    Ok(daily)
+}
+
+pub fn query_session_details(db: &Connection) -> Result<Vec<SessionDetailRow>, String> {
+    let mut statement = db
+        .prepare(
+            r#"
+            SELECT
+              path,
+              modified_at_ms,
+              size_bytes,
+              rows_json,
+              prompt_title,
+              quota_usage_json,
+              turn_count
+            FROM session_file_rollups
+            ORDER BY modified_at_ms DESC
+            "#,
+        )
+        .map_err(|error| error.to_string())?;
+
+    let rows = statement
+        .query_map([], session_detail_from_row)
+        .map_err(|error| error.to_string())?;
+
+    rows.collect::<Result<Vec<_>, _>>()
+        .map_err(|error| error.to_string())
+}
+
+pub fn query_session_detail(db: &Connection, path: &str) -> Result<SessionDetailRow, String> {
+    db.query_row(
+        "SELECT path, modified_at_ms, size_bytes, rows_json, prompt_title, quota_usage_json, turn_count FROM session_file_rollups WHERE path = ?",
+        [path],
+        session_detail_from_row,
+    ).map_err(|error| error.to_string())
+}
+
+fn session_detail_from_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<SessionDetailRow> {
+    let path: String = row.get(0)?;
+    let modified_at_ms: i64 = row.get(1)?;
+    let size_bytes: i64 = row.get(2)?;
+    let rows_json: String = row.get(3)?;
+    let prompt_title: Option<String> = row.get(4)?;
+    let quota_usage = row
+        .get::<_, Option<String>>(5)?
+        .and_then(|json| serde_json::from_str::<SessionQuotaRollup>(&json).ok());
+
+    let daily_rows = serde_json::from_str::<Vec<DailyUsageRow>>(&rows_json).unwrap_or_default();
+
+    let mut input_tokens = 0;
+    let mut cached_input_tokens = 0;
+    let mut output_tokens = 0;
+    let mut reasoning_output_tokens = 0;
+    let mut total_tokens = 0;
+    let mut cost_usd = 0.0;
+    let mut models = std::collections::BTreeSet::new();
+    let mut projects = std::collections::BTreeSet::new();
+    let mut daily_usage = Vec::with_capacity(daily_rows.len());
+
+    for r in daily_rows {
+        let quota_usage_for_date = quota_usage
+            .as_ref()
+            .and_then(|usage| usage.daily.get(&r.date).cloned());
+        input_tokens += r.input_tokens;
+        cached_input_tokens += r.cached_input_tokens;
+        output_tokens += r.output_tokens;
+        reasoning_output_tokens += r.reasoning_output_tokens;
+        total_tokens += r.total_tokens;
+        cost_usd += r.cost_usd;
+        for model in r.models.keys() {
+            models.insert(model.clone());
+        }
+        for project in r.projects.keys() {
+            projects.insert(project.clone());
+        }
+        daily_usage.push(SessionDailyUsageRow {
+            date: r.date,
+            input_tokens: r.input_tokens,
+            cached_input_tokens: r.cached_input_tokens,
+            output_tokens: r.output_tokens,
+            reasoning_output_tokens: r.reasoning_output_tokens,
+            total_tokens: r.total_tokens,
+            cost_usd: r.cost_usd,
+            models: r.models.into_keys().collect(),
+            projects: r.projects.into_keys().collect(),
+            quota_usage: quota_usage_for_date,
+        });
+    }
+
+    let session_id = Path::new(&path)
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or(&path)
+        .to_string();
+
+    Ok(SessionDetailRow {
+        path,
+        session_id,
+        thread_name: prompt_title.filter(|title| !title.is_empty()),
+        agent_session_id: None,
+        parent_session_id: None,
+        agent_depth: 0,
+        agent_path: None,
+        agent_nickname: None,
+        agent_role: None,
+        modified_at_ms,
+        size_bytes,
+        turn_count: row.get(6)?,
+        input_tokens,
+        cached_input_tokens,
+        output_tokens,
+        reasoning_output_tokens,
+        total_tokens,
+        cost_usd,
+        models: models.into_iter().collect(),
+        projects: projects.into_iter().collect(),
+        project_references: Vec::new(),
+        daily_usage,
+        quota_usage: quota_usage.map(|usage| usage.session),
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::pricing::PricingSource;
+    use crate::types::SessionQuotaWindowUsage;
+    use chrono::Utc;
+
+    #[test]
+    fn model_quota_samples_exclude_overlapping_sessions() {
+        let db = Connection::open_in_memory().unwrap();
+        db.execute_batch("CREATE TABLE session_file_rollups (quota_usage_json TEXT)")
+            .unwrap();
+        let sample = |model: &str, window_minutes: i64, start: &str, end: &str| ModelQuotaSample {
+            date: "2026-04-02".to_string(),
+            model: model.to_string(),
+            window_minutes,
+            observed_start_at: start.to_string(),
+            observed_end_at: end.to_string(),
+            tokens: 1_000_000,
+            observed_delta_percent: 2.0,
+        };
+        let rows = [
+            sample("a", 300, "2026-04-02T00:00:00Z", "2026-04-02T01:00:00Z"),
+            sample("b", 300, "2026-04-02T00:30:00Z", "2026-04-02T01:30:00Z"),
+            sample("a", 300, "2026-04-02T02:00:00Z", "2026-04-02T03:00:00Z"),
+            sample("a", 300, "2026-04-02T03:00:00Z", "2026-04-02T04:00:00Z"),
+            sample("a", 10080, "2026-04-02T00:00:00Z", "2026-04-02T01:00:00Z"),
+        ];
+        for entry in rows {
+            let rollup = SessionQuotaRollup {
+                model_samples: vec![entry],
+                ..Default::default()
+            };
+            db.execute(
+                "INSERT INTO session_file_rollups (quota_usage_json) VALUES (?)",
+                [serde_json::to_string(&rollup).unwrap()],
+            )
+            .unwrap();
+        }
+        let totals = query_model_quota_samples(&db, "2026-04-02", "2026-04-02").unwrap();
+        assert_eq!(totals[&("a".to_string(), 300)].tokens, 2_000_000);
+        assert_eq!(totals[&("a".to_string(), 300)].samples, 2);
+        assert!(!totals.contains_key(&("b".to_string(), 300)));
+        assert_eq!(totals[&("a".to_string(), 10080)].tokens, 1_000_000);
+    }
+
+    #[test]
+    fn daily_quota_percents_merge_overlapping_sessions_and_add_reset_windows() {
+        let db = Connection::open_in_memory().unwrap();
+        db.execute_batch("CREATE TABLE session_file_rollups (quota_usage_json TEXT)")
+            .unwrap();
+        let window = |start, end, reset: &str| SessionQuotaWindowUsage {
+            window_minutes: 300,
+            resets_at: Some(reset.to_string()),
+            observed_start_at: "2026-04-02T00:00:00Z".to_string(),
+            observed_end_at: "2026-04-02T01:00:00Z".to_string(),
+            observed_start_percent: start,
+            observed_end_percent: end,
+            observed_delta_percent: end - start,
+            below_resolution: false,
+        };
+        let first = SessionQuotaRollup {
+            daily: BTreeMap::from([(
+                "2026-04-02".to_string(),
+                SessionQuotaUsage {
+                    five_hour: vec![window(10.0, 30.0, "reset-1")],
+                    weekly: vec![window(40.0, 50.0, "weekly-reset")],
+                },
+            )]),
+            ..Default::default()
+        };
+        let second = SessionQuotaRollup {
+            daily: BTreeMap::from([(
+                "2026-04-02".to_string(),
+                SessionQuotaUsage {
+                    five_hour: vec![window(25.0, 35.0, "reset-1"), window(0.0, 5.0, "reset-2")],
+                    weekly: vec![window(48.0, 55.0, "weekly-reset")],
+                },
+            )]),
+            ..Default::default()
+        };
+        for rollup in [first, second] {
+            db.execute(
+                "INSERT INTO session_file_rollups (quota_usage_json) VALUES (?)",
+                [serde_json::to_string(&rollup).unwrap()],
+            )
+            .unwrap();
+        }
+
+        let daily = query_daily_quota_percents(&db, "2026-04-02", "2026-04-02").unwrap();
+        assert_eq!(daily["2026-04-02"], (Some(30.0), Some(15.0)));
+        assert!(query_daily_quota_percents(&db, "2026-04-03", "2026-04-03")
+            .unwrap()
+            .is_empty());
+    }
+
+    #[test]
+    fn recalculates_existing_daily_rollup_costs_without_reparsing_sessions() {
+        let path = std::env::temp_dir().join(format!(
+            "codex-usage-db-reprice-{}.sqlite",
+            Utc::now().timestamp_nanos_opt().unwrap_or_default()
+        ));
+        let mut db = open_database(&path).unwrap();
+        let usage = ModelUsage {
+            input_tokens: 1_000_000,
+            output_tokens: 1_000_000,
+            total_tokens: 2_000_000,
+            ..Default::default()
+        };
+        upsert_daily_rows(
+            &mut db,
+            &[DailyUsageRow {
+                date: "2026-09-23".to_string(),
+                input_tokens: usage.input_tokens,
+                cached_input_tokens: 0,
+                output_tokens: usage.output_tokens,
+                reasoning_output_tokens: 0,
+                total_tokens: usage.total_tokens,
+                cost_usd: 999.0,
+                models: BTreeMap::from([("gpt-5".to_string(), usage)]),
+                projects: BTreeMap::new(),
+                updated_at: "2026-09-23T00:00:00.000Z".to_string(),
+            }],
+        )
+        .unwrap();
+
+        recalculate_daily_costs(&mut db, &PricingSource::embedded()).unwrap();
+
+        let rows = query_all_daily_rows(&db).unwrap();
+        assert_eq!(pricing_models(&db).unwrap(), ["gpt-5"]);
+        assert!((rows[0].cost_usd - 11.25).abs() < f64::EPSILON);
+        let _ = std::fs::remove_file(path);
+    }
+
+    #[test]
+    fn open_database_adds_missing_rollup_columns() {
+        let path = std::env::temp_dir().join(format!(
+            "codex-usage-db-migration-{}.sqlite",
+            Utc::now().timestamp_nanos_opt().unwrap_or_default()
+        ));
+        {
+            let db = Connection::open(&path).unwrap();
+            db.execute_batch(
+                r#"
+                CREATE TABLE daily_usage_rollups (
+                  date TEXT PRIMARY KEY,
+                  input_tokens INTEGER NOT NULL,
+                  cached_input_tokens INTEGER NOT NULL,
+                  output_tokens INTEGER NOT NULL,
+                  reasoning_output_tokens INTEGER NOT NULL,
+                  total_tokens INTEGER NOT NULL,
+                  cost_usd REAL NOT NULL,
+                  models_json TEXT NOT NULL,
+                  updated_at TEXT NOT NULL
+                );
+
+                CREATE TABLE session_file_rollups (
+                  path TEXT PRIMARY KEY,
+                  modified_at_ms INTEGER NOT NULL,
+                  size_bytes INTEGER NOT NULL,
+                  rows_json TEXT NOT NULL,
+                  updated_at TEXT NOT NULL
+                );
+                "#,
+            )
+            .unwrap();
+        }
+
+        let db = open_database(&path).unwrap();
+        let has_projects_json = db
+            .prepare("PRAGMA table_info(daily_usage_rollups)")
+            .unwrap()
+            .query_map([], |row| row.get::<_, String>(1))
+            .unwrap()
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap()
+            .iter()
+            .any(|column| column == "projects_json");
+
+        assert!(has_projects_json);
+        let has_prompt_title = db
+            .prepare("PRAGMA table_info(session_file_rollups)")
+            .unwrap()
+            .query_map([], |row| row.get::<_, String>(1))
+            .unwrap()
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap()
+            .iter()
+            .any(|column| column == "prompt_title");
+
+        assert!(has_prompt_title);
+        let has_quota_usage_json = db
+            .prepare("PRAGMA table_info(session_file_rollups)")
+            .unwrap()
+            .query_map([], |row| row.get::<_, String>(1))
+            .unwrap()
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap()
+            .iter()
+            .any(|column| column == "quota_usage_json");
+        assert!(has_quota_usage_json);
+        let has_quota_parser_version = db
+            .prepare("PRAGMA table_info(session_file_rollups)")
+            .unwrap()
+            .query_map([], |row| row.get::<_, String>(1))
+            .unwrap()
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap()
+            .iter()
+            .any(|column| column == "quota_parser_version");
+        assert!(has_quota_parser_version);
+
+        db.execute(
+            r#"
+            INSERT INTO session_file_rollups (
+              path,
+              modified_at_ms,
+              size_bytes,
+              rows_json,
+              prompt_title,
+              quota_usage_json,
+              quota_parser_version,
+              updated_at
+            ) VALUES ('/tmp/legacy-quota.jsonl', 1, 2, '[]', '', '{}', 1, '2026-08-21T00:00:00.000Z')
+            "#,
+            [],
+        )
+        .unwrap();
+        assert!(
+            query_session_file_rollup(&db, "/tmp/legacy-quota.jsonl", 1, 2)
+                .unwrap()
+                .is_none()
+        );
+        let _ = std::fs::remove_file(path);
+    }
+
+    #[test]
+    fn session_details_use_cached_prompt_title() {
+        let path = std::env::temp_dir().join(format!(
+            "codex-usage-db-session-title-{}.sqlite",
+            Utc::now().timestamp_nanos_opt().unwrap_or_default()
+        ));
+        let mut db = open_database(&path).unwrap();
+        upsert_session_file_rollups(
+            &mut db,
+            &[
+                SessionFileRollup {
+                    turn_count: 0,
+                    path: "/tmp/titled.jsonl".to_string(),
+                    modified_at_ms: 2,
+                    size_bytes: 2,
+                    rows: vec![],
+                    prompt_title: Some("First real request".to_string()),
+                    quota_usage: None,
+                },
+                SessionFileRollup {
+                    turn_count: 0,
+                    path: "/tmp/untitled.jsonl".to_string(),
+                    modified_at_ms: 1,
+                    size_bytes: 1,
+                    rows: vec![],
+                    prompt_title: Some(String::new()),
+                    quota_usage: None,
+                },
+            ],
+            "2026-07-16T00:00:00.000Z",
+        )
+        .unwrap();
+
+        let sessions = query_session_details(&db).unwrap();
+
+        assert_eq!(
+            sessions[0].thread_name.as_deref(),
+            Some("First real request")
+        );
+        assert_eq!(sessions[1].thread_name, None);
+        let _ = std::fs::remove_file(path);
+    }
+
+    #[test]
+    fn session_details_preserve_daily_usage_for_resumed_sessions() {
+        let path = std::env::temp_dir().join(format!(
+            "codex-usage-db-session-daily-{}.sqlite",
+            Utc::now().timestamp_nanos_opt().unwrap_or_default()
+        ));
+        let mut db = open_database(&path).unwrap();
+        let model_usage = ModelUsage {
+            input_tokens: 100,
+            output_tokens: 40,
+            total_tokens: 140,
+            ..Default::default()
+        };
+        let project_usage = ProjectUsage {
+            input_tokens: 100,
+            output_tokens: 40,
+            total_tokens: 140,
+            models: BTreeMap::from([("gpt-5".to_string(), model_usage.clone())]),
+            ..Default::default()
+        };
+        let daily_row = |date: &str, multiplier: i64| DailyUsageRow {
+            date: date.to_string(),
+            input_tokens: 100 * multiplier,
+            cached_input_tokens: 20 * multiplier,
+            output_tokens: 40 * multiplier,
+            reasoning_output_tokens: 10 * multiplier,
+            total_tokens: 150 * multiplier,
+            cost_usd: 0.01 * multiplier as f64,
+            models: BTreeMap::from([("gpt-5".to_string(), model_usage.clone())]),
+            projects: BTreeMap::from([("/repo/app".to_string(), project_usage.clone())]),
+            updated_at: "2026-07-02T00:00:00.000Z".to_string(),
+        };
+        upsert_session_file_rollups(
+            &mut db,
+            &[SessionFileRollup {
+                turn_count: 0,
+                path: "/tmp/resumed.jsonl".to_string(),
+                modified_at_ms: 2,
+                size_bytes: 200,
+                rows: vec![daily_row("2026-07-01", 1), daily_row("2026-07-02", 2)],
+                prompt_title: None,
+                quota_usage: None,
+            }],
+            "2026-07-02T00:00:00.000Z",
+        )
+        .unwrap();
+
+        let sessions = query_session_details(&db).unwrap();
+
+        assert_eq!(sessions.len(), 1);
+        assert_eq!(sessions[0].total_tokens, 450);
+        assert!((sessions[0].cost_usd - 0.03).abs() < f64::EPSILON);
+        assert_eq!(sessions[0].daily_usage.len(), 2);
+        assert_eq!(sessions[0].daily_usage[0].date, "2026-07-01");
+        assert_eq!(sessions[0].daily_usage[0].total_tokens, 150);
+        assert_eq!(sessions[0].daily_usage[1].date, "2026-07-02");
+        assert_eq!(sessions[0].daily_usage[1].total_tokens, 300);
+        assert_eq!(sessions[0].daily_usage[1].models, ["gpt-5"]);
+        assert_eq!(sessions[0].daily_usage[1].projects, ["/repo/app"]);
+        let _ = std::fs::remove_file(path);
+    }
+
+    #[test]
+    fn reset_usage_state_clears_cached_tables() {
+        let path = std::env::temp_dir().join(format!(
+            "codex-usage-db-reset-{}.sqlite",
+            Utc::now().timestamp_nanos_opt().unwrap_or_default()
+        ));
+        let db = open_database(&path).unwrap();
+        db.execute(
+            r#"
+            INSERT INTO daily_usage_rollups (
+              date,
+              input_tokens,
+              cached_input_tokens,
+              output_tokens,
+              reasoning_output_tokens,
+              total_tokens,
+              cost_usd,
+              models_json,
+              projects_json,
+              updated_at
+            ) VALUES ('2026-05-08', 1, 0, 2, 0, 3, 0.01, '{}', '{}', '2026-05-08T00:00:00.000Z')
+            "#,
+            [],
+        )
+        .unwrap();
+        db.execute(
+            r#"
+            INSERT INTO session_file_rollups (
+              path,
+              modified_at_ms,
+              size_bytes,
+              rows_json,
+              updated_at
+            ) VALUES ('/tmp/session.jsonl', 1, 2, '[]', '2026-05-08T00:00:00.000Z')
+            "#,
+            [],
+        )
+        .unwrap();
+        record_scan_run(&db, "2026-05-08T00:00:00.000Z", "UTC", 1).unwrap();
+
+        reset_usage_state(&db).unwrap();
+
+        for table in ["daily_usage_rollups", "session_file_rollups", "scan_runs"] {
+            let count: i64 = db
+                .query_row(&format!("SELECT COUNT(*) FROM {table}"), [], |row| {
+                    row.get(0)
+                })
+                .unwrap();
+            assert_eq!(count, 0);
+        }
+        let _ = std::fs::remove_file(path);
+    }
+}

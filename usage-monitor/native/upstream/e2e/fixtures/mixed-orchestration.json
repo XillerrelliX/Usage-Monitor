@@ -1,0 +1,98 @@
+[
+  {
+    "timestamp": "2026-10-10T11:02:59.151Z",
+    "type": "response_item",
+    "payload": {
+      "type": "custom_tool_call",
+      "id": "ctc_056a2bedfe7f55a1016aca1b6082988199ac5f554a87686b1c",
+      "status": "completed",
+      "call_id": "call_9a31dc46f7d74249b96c0f6a8873af23",
+      "name": "exec",
+      "input": "await Promise.allSettled([\n[\"rtk proxy rg -n 'unparsedOutputText' src/components/session-detail-modal.tsx src/lib/session-conversation.ts\",2200],\n[\"rtk proxy pnpm exec vitest run src/lib/session-conversation.test.ts src/components/session-conversation.test.tsx\",3500],\n[\"rtk proxy pnpm typecheck\",2500],\n].map(async ([cmd,max_output_tokens])=>text(await tools.exec_command({cmd,max_output_tokens,yield_time_ms:1000}))));\ntext(await tools.write_stdin({session_id:78347,chars:\"\",yield_time_ms:1000,max_output_tokens:3500}));\ntext(await tools.write_stdin({session_id:99948,chars:\"\",yield_time_ms:1000,max_output_tokens:3500}));\n"
+    }
+  },
+  {
+    "timestamp": "2026-10-10T11:03:05.485Z",
+    "type": "response_item",
+    "payload": {
+      "type": "custom_tool_call_output",
+      "id": "ctco_01a1257b-140d-7b50-a19f-dc85499c6e91",
+      "call_id": "call_9a31dc46f7d74249b96c0f6a8873af23",
+      "output": [
+        {
+          "type": "input_text",
+          "text": "Script completed\nWall time 6.3 seconds\nOutput:\n"
+        },
+        {
+          "type": "input_text",
+          "text": "{\"chunk_id\":\"44e97c\",\"wall_time_seconds\":0.358348332,\"exit_code\":0,\"original_token_count\":336,\"output\":\"src/lib/session-conversation.ts:410:  return { results, unparsedOutputText: unparsed.length ? unparsed.join(\\\"\\\\n\\\") : null };\\nsrc/lib/session-conversation.ts:440:  const { results: execResults, unparsedOutputText } = execResultsFromContent(content, output);\\nsrc/lib/session-conversation.ts:466:    ? { activities, unparsedOutputText } : null;\\nsrc/lib/session-conversation.ts:679:  const unparsedOutputText = nestedProjection?.unparsedOutputText ?? null;\\nsrc/lib/session-conversation.ts:690:  return { outerToolName, backgroundTerminalInput, userInputQuestions, webSearchQueries, webSearchResults, batchActivities, nestedActivities, unparsedOutputText, execArguments, argumentEntries, execOutput, contentBlocks, argumentsText, displayToolName, outputText, stderrText };\\nsrc/components/session-detail-modal.tsx:784:  const { outerToolName, backgroundTerminalInput, userInputQuestions, webSearchQueries, webSearchResults, batchActivities, nestedActivities, unparsedOutputText, execArguments, argumentEntries, execOutput, contentBlocks, argumentsText, displayToolName, outputText, stderrText } = activity;\\nsrc/components/session-detail-modal.tsx:812:      {unparsedOutputText ? <div className=\\\"mt-2\\\">\\nsrc/components/session-detail-modal.tsx:822:        <ActivityOutput text={unparsedOutputText} expanded={isExpanded} tone=\\\"text-muted-foreground\\\" />\\n\"}"
+        },
+        {
+          "type": "input_text",
+          "text": "{\"chunk_id\":\"c6f300\",\"wall_time_seconds\":1.002401268,\"session_id\":85274,\"original_token_count\":0,\"output\":\"\"}"
+        },
+        {
+          "type": "input_text",
+          "text": "{\"chunk_id\":\"2b2d69\",\"wall_time_seconds\":1.001261107,\"session_id\":25450,\"original_token_count\":0,\"output\":\"\"}"
+        },
+        {
+          "type": "input_text",
+          "text": "{\"chunk_id\":\"392618\",\"wall_time_seconds\":0.000028866,\"exit_code\":101,\"original_token_count\":47,\"output\":\"test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 161 filtered out; finished in 0.00s\\n[full output: \\\"$HOME/Library/Application Support/rtk/tee/1791630171_cargo_test.log\\\"]\\n\"}"
+        },
+        {
+          "type": "input_text",
+          "text": "{\"chunk_id\":\"d446df\",\"wall_time_seconds\":5.001577118,\"session_id\":99948,\"original_token_count\":80,\"output\":\"$ tauri build --debug --no-bundle --features e2e --config src-tauri/tauri.e2e.conf.json --config '{\\\"identifier\\\":\\\"com.codexusage.desktop.e2e.archives\\\"}'\\n        Info Looking up installed tauri packages to check mismatched versions...\\n     Running beforeBuildCommand `pnpm build --mode e2e`\\n$ pnpm build:web --mode e2e\\n\"}"
+        }
+      ]
+    }
+  },
+  {
+    "timestamp": "2026-10-10T11:03:05.689Z",
+    "type": "event_msg",
+    "payload": {
+      "type": "token_count",
+      "info": {
+        "total_token_usage": {
+          "input_tokens": 1450114,
+          "cached_input_tokens": 1356416,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 11660,
+          "reasoning_output_tokens": 2603,
+          "total_tokens": 1461774
+        },
+        "last_token_usage": {
+          "input_tokens": 102416,
+          "cached_input_tokens": 99840,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 243,
+          "reasoning_output_tokens": 67,
+          "total_tokens": 102659
+        },
+        "model_context_window": 258400
+      },
+      "rate_limits": {
+        "limit_id": "codex",
+        "limit_name": null,
+        "primary": {
+          "used_percent": 6.0,
+          "window_minutes": 300,
+          "resets_at": 1791647849
+        },
+        "secondary": {
+          "used_percent": 31.0,
+          "window_minutes": 10080,
+          "resets_at": 1791953948
+        },
+        "credits": {
+          "has_credits": false,
+          "unlimited": false,
+          "balance": "0"
+        },
+        "individual_limit": null,
+        "spend_control_reached": null,
+        "plan_type": "plus",
+        "rate_limit_reached_type": null
+      }
+    }
+  }
+]

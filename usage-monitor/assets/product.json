@@ -1,0 +1,9 @@
+{
+  "name": "Usage Monitor",
+  "slug": "usage-monitor",
+  "version": "1.4.0",
+  "windowsPackageRoot": "Usage-Monitor",
+  "platform": "windows-x86_64",
+  "engineSha256": "fd6b9ab7f014e5e180c7bab14ee079763c6db07a7cccc48b59ff0da2b12adb37",
+  "sourceCommit": "6bd0eed7b108497aa50051580387345340e3167f"
+}

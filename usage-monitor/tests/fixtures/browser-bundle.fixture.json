@@ -1,0 +1,642 @@
+{
+  "algorithmVersion": "usage-ledger-2026-10-27.1",
+  "appModels": [
+    {
+      "cachedInputTokens": 254,
+      "daily": [
+        {
+          "cachedInputTokens": 103,
+          "date": "2026-10-23",
+          "inputTokens": 199,
+          "outputTokens": 53,
+          "reasoningTokens": 21,
+          "totalTokens": 252
+        },
+        {
+          "cachedInputTokens": 82,
+          "date": "2026-10-24",
+          "inputTokens": 144,
+          "outputTokens": 20,
+          "reasoningTokens": 6,
+          "totalTokens": 164
+        },
+        {
+          "cachedInputTokens": 69,
+          "date": "2026-10-26",
+          "inputTokens": 71,
+          "outputTokens": 2,
+          "reasoningTokens": 0,
+          "totalTokens": 73
+        }
+      ],
+      "id": "model-a",
+      "inputTokens": 414,
+      "label": "model-a",
+      "outputTokens": 75,
+      "reasoningTokens": 27,
+      "sharePercent": 88.74773139745916,
+      "totalTokens": 489
+    },
+    {
+      "cachedInputTokens": 3,
+      "daily": [
+        {
+          "cachedInputTokens": 2,
+          "date": "2026-10-24",
+          "inputTokens": 17,
+          "outputTokens": 9,
+          "reasoningTokens": 3,
+          "totalTokens": 26
+        },
+        {
+          "cachedInputTokens": 1,
+          "date": "2026-10-25",
+          "inputTokens": 5,
+          "outputTokens": 4,
+          "reasoningTokens": 2,
+          "totalTokens": 9
+        },
+        {
+          "cachedInputTokens": 0,
+          "date": "2026-10-26",
+          "inputTokens": 3,
+          "outputTokens": 2,
+          "reasoningTokens": 1,
+          "totalTokens": 5
+        }
+      ],
+      "id": "model-b",
+      "inputTokens": 25,
+      "label": "model-b",
+      "outputTokens": 15,
+      "reasoningTokens": 6,
+      "sharePercent": 7.259528130671507,
+      "totalTokens": 40
+    },
+    {
+      "cachedInputTokens": 6,
+      "daily": [
+        {
+          "cachedInputTokens": 6,
+          "date": "2026-10-24",
+          "inputTokens": 19,
+          "outputTokens": 3,
+          "reasoningTokens": 2,
+          "totalTokens": 22
+        }
+      ],
+      "id": "model-c",
+      "inputTokens": 19,
+      "label": "model-c",
+      "outputTokens": 3,
+      "reasoningTokens": 2,
+      "sharePercent": 3.9927404718693285,
+      "totalTokens": 22
+    }
+  ],
+  "appProjects": [
+    {
+      "cachedInputTokens": 254,
+      "daily": [
+        {
+          "cachedInputTokens": 103,
+          "date": "2026-10-23",
+          "inputTokens": 199,
+          "outputTokens": 53,
+          "reasoningTokens": 21,
+          "totalTokens": 252
+        },
+        {
+          "cachedInputTokens": 82,
+          "date": "2026-10-24",
+          "inputTokens": 144,
+          "outputTokens": 20,
+          "reasoningTokens": 6,
+          "totalTokens": 164
+        },
+        {
+          "cachedInputTokens": 69,
+          "date": "2026-10-26",
+          "inputTokens": 71,
+          "outputTokens": 2,
+          "reasoningTokens": 0,
+          "totalTokens": 73
+        }
+      ],
+      "id": "C:\\one\\shared",
+      "inputTokens": 414,
+      "label": "C:\\one\\shared",
+      "outputTokens": 75,
+      "reasoningTokens": 27,
+      "sharePercent": 88.74773139745916,
+      "totalTokens": 489
+    },
+    {
+      "cachedInputTokens": 3,
+      "daily": [
+        {
+          "cachedInputTokens": 2,
+          "date": "2026-10-24",
+          "inputTokens": 17,
+          "outputTokens": 9,
+          "reasoningTokens": 3,
+          "totalTokens": 26
+        },
+        {
+          "cachedInputTokens": 1,
+          "date": "2026-10-25",
+          "inputTokens": 5,
+          "outputTokens": 4,
+          "reasoningTokens": 2,
+          "totalTokens": 9
+        },
+        {
+          "cachedInputTokens": 0,
+          "date": "2026-10-26",
+          "inputTokens": 3,
+          "outputTokens": 2,
+          "reasoningTokens": 1,
+          "totalTokens": 5
+        }
+      ],
+      "id": "D:\\two\\shared",
+      "inputTokens": 25,
+      "label": "D:\\two\\shared",
+      "outputTokens": 15,
+      "reasoningTokens": 6,
+      "sharePercent": 7.259528130671507,
+      "totalTokens": 40
+    },
+    {
+      "cachedInputTokens": 6,
+      "daily": [
+        {
+          "cachedInputTokens": 6,
+          "date": "2026-10-24",
+          "inputTokens": 19,
+          "outputTokens": 3,
+          "reasoningTokens": 2,
+          "totalTokens": 22
+        }
+      ],
+      "id": "E:\\separate",
+      "inputTokens": 19,
+      "label": "E:\\separate",
+      "outputTokens": 3,
+      "reasoningTokens": 2,
+      "sharePercent": 3.9927404718693285,
+      "totalTokens": 22
+    }
+  ],
+  "chats": [
+    {
+      "id": "10000000-0000-4000-8000-000000000001",
+      "label": "Chosen chat",
+      "labelSource": "threads.name"
+    },
+    {
+      "id": "50000000-0000-4000-8000-000000000005",
+      "label": "Unrelated chat",
+      "labelSource": "threads.name"
+    },
+    {
+      "id": "40000000-0000-4000-8000-000000000004",
+      "label": "Separate fork",
+      "labelSource": "threads.name"
+    }
+  ],
+  "coverage": {
+    "endDate": "2026-10-26",
+    "historyComplete": true,
+    "recordedDays": [
+      "2026-10-23",
+      "2026-10-24",
+      "2026-10-25",
+      "2026-10-26"
+    ],
+    "startDate": "2026-10-23"
+  },
+  "daily": [
+    {
+      "cachedInputTokens": 103,
+      "date": "2026-10-23",
+      "inputTokens": 199,
+      "outputTokens": 53,
+      "reasoningTokens": 21,
+      "totalTokens": 252
+    },
+    {
+      "cachedInputTokens": 90,
+      "date": "2026-10-24",
+      "inputTokens": 180,
+      "outputTokens": 32,
+      "reasoningTokens": 11,
+      "totalTokens": 212
+    },
+    {
+      "cachedInputTokens": 1,
+      "date": "2026-10-25",
+      "inputTokens": 5,
+      "outputTokens": 4,
+      "reasoningTokens": 2,
+      "totalTokens": 9
+    },
+    {
+      "cachedInputTokens": 69,
+      "date": "2026-10-26",
+      "inputTokens": 74,
+      "outputTokens": 4,
+      "reasoningTokens": 1,
+      "totalTokens": 78
+    }
+  ],
+  "diagnostics": {
+    "attribution": {
+      "projectModels": null,
+      "sessionModels": null,
+      "sessionProjects": null
+    },
+    "status": "complete",
+    "warnings": []
+  },
+  "features": {
+    "chatFilter": true,
+    "models": true,
+    "projectFilter": true,
+    "projectModels": true,
+    "projects": true,
+    "sessionModels": true,
+    "sessionProjects": true
+  },
+  "generatedAt": "2026-10-26T12:00:00+00:00",
+  "numericComputedAt": "2026-10-26T12:00:00+00:00",
+  "owners": [
+    {
+      "chatId": "10000000-0000-4000-8000-000000000001",
+      "id": "10000000-0000-4000-8000-000000000001",
+      "kind": "self",
+      "label": "Main agent",
+      "model": "App cache",
+      "parentId": null,
+      "path": null,
+      "responses": null
+    },
+    {
+      "chatId": "50000000-0000-4000-8000-000000000005",
+      "id": "50000000-0000-4000-8000-000000000005",
+      "kind": "self",
+      "label": "Main agent",
+      "model": "App cache",
+      "parentId": null,
+      "path": null,
+      "responses": null
+    },
+    {
+      "chatId": "10000000-0000-4000-8000-000000000001",
+      "id": "20000000-0000-4000-8000-000000000002",
+      "kind": "agent",
+      "label": "Agent 20000000",
+      "model": "App cache",
+      "parentId": "10000000-0000-4000-8000-000000000001",
+      "path": null,
+      "responses": null
+    },
+    {
+      "chatId": "40000000-0000-4000-8000-000000000004",
+      "id": "40000000-0000-4000-8000-000000000004",
+      "kind": "self",
+      "label": "Main agent",
+      "model": "App cache",
+      "parentId": null,
+      "path": null,
+      "responses": null
+    },
+    {
+      "chatId": "10000000-0000-4000-8000-000000000001",
+      "id": "30000000-0000-4000-8000-000000000003",
+      "kind": "agent",
+      "label": "Agent 30000000",
+      "model": "App cache",
+      "parentId": "20000000-0000-4000-8000-000000000002",
+      "path": null,
+      "responses": null
+    }
+  ],
+  "records": [
+    {
+      "cachedInputTokens": 103,
+      "date": "2026-10-23",
+      "inputTokens": 199,
+      "key": "1:0",
+      "models": {
+        "model-a": {
+          "cachedInputTokens": 103,
+          "inputTokens": 199,
+          "outputTokens": 53,
+          "reasoningTokens": 21,
+          "totalTokens": 252
+        }
+      },
+      "outputTokens": 53,
+      "ownerId": "10000000-0000-4000-8000-000000000001",
+      "projectModels": {
+        "C:\\one\\shared": {
+          "model-a": {
+            "cachedInputTokens": 103,
+            "inputTokens": 199,
+            "outputTokens": 53,
+            "reasoningTokens": 21,
+            "totalTokens": 252
+          }
+        }
+      },
+      "projects": {
+        "C:\\one\\shared": {
+          "cachedInputTokens": 103,
+          "inputTokens": 199,
+          "outputTokens": 53,
+          "reasoningTokens": 21,
+          "totalTokens": 252
+        }
+      },
+      "reasoningTokens": 21,
+      "totalTokens": 252
+    },
+    {
+      "cachedInputTokens": 73,
+      "date": "2026-10-24",
+      "inputTokens": 118,
+      "key": "1:1",
+      "models": {
+        "model-a": {
+          "cachedInputTokens": 71,
+          "inputTokens": 101,
+          "outputTokens": 13,
+          "reasoningTokens": 5,
+          "totalTokens": 114
+        },
+        "model-b": {
+          "cachedInputTokens": 2,
+          "inputTokens": 17,
+          "outputTokens": 9,
+          "reasoningTokens": 3,
+          "totalTokens": 26
+        }
+      },
+      "outputTokens": 22,
+      "ownerId": "10000000-0000-4000-8000-000000000001",
+      "projectModels": {
+        "C:\\one\\shared": {
+          "model-a": {
+            "cachedInputTokens": 71,
+            "inputTokens": 101,
+            "outputTokens": 13,
+            "reasoningTokens": 5,
+            "totalTokens": 114
+          }
+        },
+        "D:\\two\\shared": {
+          "model-b": {
+            "cachedInputTokens": 2,
+            "inputTokens": 17,
+            "outputTokens": 9,
+            "reasoningTokens": 3,
+            "totalTokens": 26
+          }
+        }
+      },
+      "projects": {
+        "C:\\one\\shared": {
+          "cachedInputTokens": 71,
+          "inputTokens": 101,
+          "outputTokens": 13,
+          "reasoningTokens": 5,
+          "totalTokens": 114
+        },
+        "D:\\two\\shared": {
+          "cachedInputTokens": 2,
+          "inputTokens": 17,
+          "outputTokens": 9,
+          "reasoningTokens": 3,
+          "totalTokens": 26
+        }
+      },
+      "reasoningTokens": 8,
+      "totalTokens": 140
+    },
+    {
+      "cachedInputTokens": 1,
+      "date": "2026-10-25",
+      "inputTokens": 5,
+      "key": "1:2",
+      "models": {
+        "model-b": {
+          "cachedInputTokens": 1,
+          "inputTokens": 5,
+          "outputTokens": 4,
+          "reasoningTokens": 2,
+          "totalTokens": 9
+        }
+      },
+      "outputTokens": 4,
+      "ownerId": "10000000-0000-4000-8000-000000000001",
+      "projectModels": {
+        "D:\\two\\shared": {
+          "model-b": {
+            "cachedInputTokens": 1,
+            "inputTokens": 5,
+            "outputTokens": 4,
+            "reasoningTokens": 2,
+            "totalTokens": 9
+          }
+        }
+      },
+      "projects": {
+        "D:\\two\\shared": {
+          "cachedInputTokens": 1,
+          "inputTokens": 5,
+          "outputTokens": 4,
+          "reasoningTokens": 2,
+          "totalTokens": 9
+        }
+      },
+      "reasoningTokens": 2,
+      "totalTokens": 9
+    },
+    {
+      "cachedInputTokens": 11,
+      "date": "2026-10-24",
+      "inputTokens": 43,
+      "key": "2:0",
+      "models": {
+        "model-a": {
+          "cachedInputTokens": 11,
+          "inputTokens": 43,
+          "outputTokens": 7,
+          "reasoningTokens": 1,
+          "totalTokens": 50
+        }
+      },
+      "outputTokens": 7,
+      "ownerId": "20000000-0000-4000-8000-000000000002",
+      "projectModels": {
+        "C:\\one\\shared": {
+          "model-a": {
+            "cachedInputTokens": 11,
+            "inputTokens": 43,
+            "outputTokens": 7,
+            "reasoningTokens": 1,
+            "totalTokens": 50
+          }
+        }
+      },
+      "projects": {
+        "C:\\one\\shared": {
+          "cachedInputTokens": 11,
+          "inputTokens": 43,
+          "outputTokens": 7,
+          "reasoningTokens": 1,
+          "totalTokens": 50
+        }
+      },
+      "reasoningTokens": 1,
+      "totalTokens": 50
+    },
+    {
+      "cachedInputTokens": 0,
+      "date": "2026-10-26",
+      "inputTokens": 3,
+      "key": "3:0",
+      "models": {
+        "model-b": {
+          "cachedInputTokens": 0,
+          "inputTokens": 3,
+          "outputTokens": 2,
+          "reasoningTokens": 1,
+          "totalTokens": 5
+        }
+      },
+      "outputTokens": 2,
+      "ownerId": "30000000-0000-4000-8000-000000000003",
+      "projectModels": {
+        "D:\\two\\shared": {
+          "model-b": {
+            "cachedInputTokens": 0,
+            "inputTokens": 3,
+            "outputTokens": 2,
+            "reasoningTokens": 1,
+            "totalTokens": 5
+          }
+        }
+      },
+      "projects": {
+        "D:\\two\\shared": {
+          "cachedInputTokens": 0,
+          "inputTokens": 3,
+          "outputTokens": 2,
+          "reasoningTokens": 1,
+          "totalTokens": 5
+        }
+      },
+      "reasoningTokens": 1,
+      "totalTokens": 5
+    },
+    {
+      "cachedInputTokens": 6,
+      "date": "2026-10-24",
+      "inputTokens": 19,
+      "key": "4:0",
+      "models": {
+        "model-c": {
+          "cachedInputTokens": 6,
+          "inputTokens": 19,
+          "outputTokens": 3,
+          "reasoningTokens": 2,
+          "totalTokens": 22
+        }
+      },
+      "outputTokens": 3,
+      "ownerId": "40000000-0000-4000-8000-000000000004",
+      "projectModels": {
+        "E:\\separate": {
+          "model-c": {
+            "cachedInputTokens": 6,
+            "inputTokens": 19,
+            "outputTokens": 3,
+            "reasoningTokens": 2,
+            "totalTokens": 22
+          }
+        }
+      },
+      "projects": {
+        "E:\\separate": {
+          "cachedInputTokens": 6,
+          "inputTokens": 19,
+          "outputTokens": 3,
+          "reasoningTokens": 2,
+          "totalTokens": 22
+        }
+      },
+      "reasoningTokens": 2,
+      "totalTokens": 22
+    },
+    {
+      "cachedInputTokens": 69,
+      "date": "2026-10-26",
+      "inputTokens": 71,
+      "key": "5:0",
+      "models": {
+        "model-a": {
+          "cachedInputTokens": 69,
+          "inputTokens": 71,
+          "outputTokens": 2,
+          "reasoningTokens": 0,
+          "totalTokens": 73
+        }
+      },
+      "outputTokens": 2,
+      "ownerId": "50000000-0000-4000-8000-000000000005",
+      "projectModels": {
+        "C:\\one\\shared": {
+          "model-a": {
+            "cachedInputTokens": 69,
+            "inputTokens": 71,
+            "outputTokens": 2,
+            "reasoningTokens": 0,
+            "totalTokens": 73
+          }
+        }
+      },
+      "projects": {
+        "C:\\one\\shared": {
+          "cachedInputTokens": 69,
+          "inputTokens": 71,
+          "outputTokens": 2,
+          "reasoningTokens": 0,
+          "totalTokens": 73
+        }
+      },
+      "reasoningTokens": 0,
+      "totalTokens": 73
+    }
+  ],
+  "schemaVersion": 1,
+  "source": {
+    "datePrecision": "day",
+    "lastScanAt": "2026-10-26T12:00:00+00:00",
+    "name": "Codex Usage Desktop",
+    "revisionSha256": "dbef0b792f5bc89974130dceae9f35ff84c43121b792e25bda629eb8813aab45",
+    "timeZone": "Europe/Berlin",
+    "version": "4.2.0"
+  },
+  "cache": {
+    "status": "hit",
+    "reason": "unchanged_source",
+    "cachePath": "synthetic-cache.json",
+    "algorithmVersion": "usage-ledger-2026-10-27.1",
+    "numericComputedAt": "2026-10-26T12:00:00+00:00",
+    "sourceRevision": "dbef0b792f5bc89974130dceae9f35ff84c43121b792e25bda629eb8813aab45",
+    "verifiedProofSha256": "3e832d15e4dfd608ef8840416d7649ae7bc2da26f6b002e81d4fc2598ab0c176",
+    "historySaved": true
+  }
+}

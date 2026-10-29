@@ -1,0 +1,22 @@
+[
+  {
+    "family": "Public Sans",
+    "license": "SIL Open Font License 1.1",
+    "licenseFile": "OFL-PublicSans.txt",
+    "embeddedIn": "dashboard.html",
+    "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/publicsans/PublicSans%5Bwght%5D.ttf",
+    "licenseSource": "https://raw.githubusercontent.com/google/fonts/main/ofl/publicsans/OFL.txt",
+    "bytes": 103316,
+    "sha256": "d75a7dc1a27eb9e336d5b33f55489d2ecb5621bf694d5c43b2415bce2ca830a8"
+  },
+  {
+    "family": "Sora",
+    "license": "SIL Open Font License 1.1",
+    "licenseFile": "OFL-Sora.txt",
+    "embeddedIn": "dashboard.html",
+    "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/sora/Sora%5Bwght%5D.ttf",
+    "licenseSource": "https://raw.githubusercontent.com/google/fonts/main/ofl/sora/OFL.txt",
+    "bytes": 111400,
+    "sha256": "84ff7096ae3ec6c8be47d906d1a0ba4de7f2ce78c615275c77301964a316e16c"
+  }
+]

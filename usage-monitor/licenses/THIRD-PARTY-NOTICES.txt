@@ -1,0 +1,402 @@
+Usage Monitor - Third-Party Notices
+==================================
+
+This directory records third-party notices for the Windows x64 package.
+Original license and notice files are reproduced in licenses/ without edits.
+THIRD-PARTY-MANIFEST.json records versions, provenance and SHA-256 digests.
+License expressions below describe upstream declarations; the original texts
+control the permissions and conditions for each component.
+
+Usage Monitor is an independent wrapper and dashboard. It is not an official
+OpenAI product. The upstream codex-usage-desktop accounting/parser sources are
+by their upstream contributors, including vincent; Usage Monitor does not
+claim authorship of those sources. The upstream MIT notice is preserved in
+licenses/upstream/codex-usage-desktop-LICENSE.txt. The pinned source revision
+is 6bd0eed7b108497aa50051580387345340e3167f (upstream version 4.2.0).
+The source package documents the offline/privacy adapter changes separately.
+
+Bundled runtime and native libraries
+-----------------------------------
+CPython 3.14.10 Windows x64 embeddable distribution: the complete original
+LICENSE.txt, including historical Python licenses, bundled third-party terms,
+and Windows binary/Microsoft Distributable Code conditions, is in
+licenses/python-3.14.10/LICENSE.txt. This original file is also kept inside
+the embedded runtime. The embeddable distribution is extracted byte-for-byte
+unchanged into runtime/python, including python314._pth. Usage Monitor's
+launcher adds adjacent application scripts and runtime/python-packages to
+sys.path at process startup. tzdata is extracted into the separate
+runtime/python-packages directory. No CPython source or binary changes.
+
+tzdata 2026.5 (IANA 2026e): original copyright/Apache-2.0 notice and full
+Apache-2.0 license are in licenses/tzdata-2026.5/.
+
+Rust Standard Library 1.90.0, x86_64-pc-windows-gnu: the original complete
+COPYRIGHT-library.html and accompanying license texts are in licenses/rust/.
+They cover the standard library and its own dependencies and retain notices
+for targets in the original distribution beyond this Windows package.
+
+GNU runtime: original COPYING.RUNTIME (GCC Runtime Library Exception 3.1),
+COPYING3 (GPL version 3), and README.txt from the Rust GNU distribution are
+in licenses/gnu-runtime/. The MinGW-w64 runtime notice supplied with the
+w64devkit 2.10.1 build tools is preserved alongside these files. The runtime
+exception is an additional permission for the runtime code to which it
+applies. The compiler and build toolchain are not bundled with Usage Monitor.
+
+SQLite 3.46.0, bundled through libsqlite3-sys 0.30.1: the source's explicit
+copyright disclaimer is reproduced verbatim in
+licenses/sqlite-3.46.0/SQLITE-COPYRIGHT-DISCLAIMER.txt. The separate Rust
+binding and rusqlite MIT licenses are in their cargo component directories.
+SQLCipher is not enabled; its notice remains in the original crate notices.
+
+Zstandard 1.5.7, bundled through zstd-sys: BSD-3-Clause notice is in
+licenses/cargo/zstd-sys-2.1.2+zstd.1.5.7/zstd/LICENSE. The BSD option is used.
+The adjacent zstd/COPYING is the upstream GPLv2 alternative, preserved as
+additional original documentation. The Rust zstd wrapper and generated
+bindings have their own notices in the zstd, zstd-safe and zstd-sys folders.
+
+Fonts embedded in the dashboard
+------------------------------
+Public Sans Version 2.001: Copyright 2015 The Public Sans Project Authors.
+Sora Version 2.000: Copyright 2019 The Sora Project Authors.
+Both fonts are under SIL Open Font License 1.1. The original copyright and
+full OFL texts are in licenses/fonts/OFL-PublicSans.txt and OFL-Sora.txt.
+
+Rust package notices
+--------------------
+The inventory below follows Cargo.lock and Cargo's Windows target metadata.
+All 82 third-party packages in that graph are included, including build-only
+dependencies. It is deliberately broader than a list of linked machine code.
+The other 18 third-party lockfile packages are excluded by Cargo for this
+Windows target; their names/checksums are recorded in the manifest.
+Each directory contains the original package LICENSE/NOTICE/COPYING/
+COPYRIGHT files, including additional vendored or alternative license texts.
+Including an alternative text does not change the stated selection above.
+
+
+ahash 0.8.12 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/ahash/0.8.12
+  Notices: licenses/cargo/ahash-0.8.12/
+
+autocfg 1.5.1 - Apache-2.0 OR MIT
+  Source: https://crates.io/crates/autocfg/1.5.1
+  Notices: licenses/cargo/autocfg-1.5.1/
+
+bitflags 2.13.2 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/bitflags/2.13.2
+  Notices: licenses/cargo/bitflags-2.13.2/
+
+cc 1.10.0 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/cc/1.10.0
+  Notices: licenses/cargo/cc-1.10.0/
+
+cfg-if 1.0.5 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/cfg-if/1.0.5
+  Notices: licenses/cargo/cfg-if-1.0.5/
+
+chrono 0.4.45 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/chrono/0.4.45
+  Notices: licenses/cargo/chrono-0.4.45/
+
+chrono-tz 0.10.4 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/chrono-tz/0.10.4
+  Notices: licenses/cargo/chrono-tz-0.10.4/
+
+displaydoc 0.2.7 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/displaydoc/0.2.7
+  Notices: licenses/cargo/displaydoc-0.2.7/
+
+fallible-iterator 0.3.0 - MIT/Apache-2.0
+  Source: https://crates.io/crates/fallible-iterator/0.3.0
+  Notices: licenses/cargo/fallible-iterator-0.3.0/
+
+fallible-streaming-iterator 0.1.9 - MIT/Apache-2.0
+  Source: https://crates.io/crates/fallible-streaming-iterator/0.1.9
+  Notices: licenses/cargo/fallible-streaming-iterator-0.1.9/
+
+find-msvc-tools 0.1.15 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/find-msvc-tools/0.1.15
+  Notices: licenses/cargo/find-msvc-tools-0.1.15/
+
+form_urlencoded 1.2.2 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/form_urlencoded/1.2.2
+  Notices: licenses/cargo/form_urlencoded-1.2.2/
+
+getrandom 0.4.3 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/getrandom/0.4.3
+  Notices: licenses/cargo/getrandom-0.4.3/
+
+hashbrown 0.14.5 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/hashbrown/0.14.5
+  Notices: licenses/cargo/hashbrown-0.14.5/
+
+hashlink 0.9.1 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/hashlink/0.9.1
+  Notices: licenses/cargo/hashlink-0.9.1/
+
+iana-time-zone 0.1.65 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/iana-time-zone/0.1.65
+  Notices: licenses/cargo/iana-time-zone-0.1.65/
+
+icu_collections 2.4.0 - Unicode-3.0
+  Source: https://crates.io/crates/icu_collections/2.4.0
+  Notices: licenses/cargo/icu_collections-2.4.0/
+
+icu_locale_core 2.4.0 - Unicode-3.0
+  Source: https://crates.io/crates/icu_locale_core/2.4.0
+  Notices: licenses/cargo/icu_locale_core-2.4.0/
+
+icu_normalizer 2.4.0 - Unicode-3.0
+  Source: https://crates.io/crates/icu_normalizer/2.4.0
+  Notices: licenses/cargo/icu_normalizer-2.4.0/
+
+icu_normalizer_data 2.4.0 - Unicode-3.0
+  Source: https://crates.io/crates/icu_normalizer_data/2.4.0
+  Notices: licenses/cargo/icu_normalizer_data-2.4.0/
+
+icu_properties 2.4.0 - Unicode-3.0
+  Source: https://crates.io/crates/icu_properties/2.4.0
+  Notices: licenses/cargo/icu_properties-2.4.0/
+
+icu_properties_data 2.4.0 - Unicode-3.0
+  Source: https://crates.io/crates/icu_properties_data/2.4.0
+  Notices: licenses/cargo/icu_properties_data-2.4.0/
+
+icu_provider 2.4.0 - Unicode-3.0
+  Source: https://crates.io/crates/icu_provider/2.4.0
+  Notices: licenses/cargo/icu_provider-2.4.0/
+
+idna 1.1.0 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/idna/1.1.0
+  Notices: licenses/cargo/idna-1.1.0/
+
+idna_adapter 1.2.2 - Apache-2.0 OR MIT
+  Source: https://crates.io/crates/idna_adapter/1.2.2
+  Notices: licenses/cargo/idna_adapter-1.2.2/
+
+itoa 1.0.18 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/itoa/1.0.18
+  Notices: licenses/cargo/itoa-1.0.18/
+
+jobserver 0.1.35 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/jobserver/0.1.35
+  Notices: licenses/cargo/jobserver-0.1.35/
+
+libsqlite3-sys 0.30.1 - MIT
+  Source: https://crates.io/crates/libsqlite3-sys/0.30.1
+  Notices: licenses/cargo/libsqlite3-sys-0.30.1/
+
+litemap 0.8.3 - Unicode-3.0
+  Source: https://crates.io/crates/litemap/0.8.3
+  Notices: licenses/cargo/litemap-0.8.3/
+
+log 0.4.34 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/log/0.4.34
+  Notices: licenses/cargo/log-0.4.34/
+
+memchr 2.8.3 - Unlicense OR MIT
+  Source: https://crates.io/crates/memchr/2.8.3
+  Notices: licenses/cargo/memchr-2.8.3/
+
+num-traits 0.2.19 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/num-traits/0.2.19
+  Notices: licenses/cargo/num-traits-0.2.19/
+
+once_cell 1.21.4 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/once_cell/1.21.4
+  Notices: licenses/cargo/once_cell-1.21.4/
+
+percent-encoding 2.3.2 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/percent-encoding/2.3.2
+  Notices: licenses/cargo/percent-encoding-2.3.2/
+
+phf 0.12.1 - MIT
+  Source: https://crates.io/crates/phf/0.12.1
+  Notices: licenses/cargo/phf-0.12.1/
+
+phf_shared 0.12.1 - MIT
+  Source: https://crates.io/crates/phf_shared/0.12.1
+  Notices: licenses/cargo/phf_shared-0.12.1/
+
+pkg-config 0.3.34 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/pkg-config/0.3.34
+  Notices: licenses/cargo/pkg-config-0.3.34/
+
+potential_utf 0.1.6 - Unicode-3.0
+  Source: https://crates.io/crates/potential_utf/0.1.6
+  Notices: licenses/cargo/potential_utf-0.1.6/
+
+proc-macro2 1.0.107 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/proc-macro2/1.0.107
+  Notices: licenses/cargo/proc-macro2-1.0.107/
+
+quote 1.0.47 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/quote/1.0.47
+  Notices: licenses/cargo/quote-1.0.47/
+
+rusqlite 0.32.1 - MIT
+  Source: https://crates.io/crates/rusqlite/0.32.1
+  Notices: licenses/cargo/rusqlite-0.32.1/
+
+same-file 1.0.6 - Unlicense/MIT
+  Source: https://crates.io/crates/same-file/1.0.6
+  Notices: licenses/cargo/same-file-1.0.6/
+
+serde 1.0.229 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/serde/1.0.229
+  Notices: licenses/cargo/serde-1.0.229/
+
+serde_core 1.0.229 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/serde_core/1.0.229
+  Notices: licenses/cargo/serde_core-1.0.229/
+
+serde_derive 1.0.229 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/serde_derive/1.0.229
+  Notices: licenses/cargo/serde_derive-1.0.229/
+
+serde_json 1.0.154 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/serde_json/1.0.154
+  Notices: licenses/cargo/serde_json-1.0.154/
+
+shlex 2.0.1 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/shlex/2.0.1
+  Notices: licenses/cargo/shlex-2.0.1/
+
+siphasher 1.0.4 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/siphasher/1.0.4
+  Notices: licenses/cargo/siphasher-1.0.4/
+
+smallvec 1.16.4 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/smallvec/1.16.4
+  Notices: licenses/cargo/smallvec-1.16.4/
+
+stable_deref_trait 1.2.1 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/stable_deref_trait/1.2.1
+  Notices: licenses/cargo/stable_deref_trait-1.2.1/
+
+syn 2.0.119 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/syn/2.0.119
+  Notices: licenses/cargo/syn-2.0.119/
+
+syn 3.0.9 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/syn/3.0.9
+  Notices: licenses/cargo/syn-3.0.9/
+
+synstructure 0.14.0 - MIT
+  Source: https://crates.io/crates/synstructure/0.14.0
+  Notices: licenses/cargo/synstructure-0.14.0/
+
+tinystr 0.8.5 - Unicode-3.0
+  Source: https://crates.io/crates/tinystr/0.8.5
+  Notices: licenses/cargo/tinystr-0.8.5/
+
+unicode-ident 1.0.27 - (MIT OR Apache-2.0) AND Unicode-3.0
+  Source: https://crates.io/crates/unicode-ident/1.0.27
+  Notices: licenses/cargo/unicode-ident-1.0.27/
+
+url 2.5.8 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/url/2.5.8
+  Notices: licenses/cargo/url-2.5.8/
+
+utf8_iter 1.0.4 - Apache-2.0 OR MIT
+  Source: https://crates.io/crates/utf8_iter/1.0.4
+  Notices: licenses/cargo/utf8_iter-1.0.4/
+
+uuid 1.29.0 - Apache-2.0 OR MIT
+  Source: https://crates.io/crates/uuid/1.29.0
+  Notices: licenses/cargo/uuid-1.29.0/
+
+vcpkg 0.2.15 - MIT/Apache-2.0
+  Source: https://crates.io/crates/vcpkg/0.2.15
+  Notices: licenses/cargo/vcpkg-0.2.15/
+
+version_check 0.9.5 - MIT/Apache-2.0
+  Source: https://crates.io/crates/version_check/0.9.5
+  Notices: licenses/cargo/version_check-0.9.5/
+
+walkdir 2.5.0 - Unlicense/MIT
+  Source: https://crates.io/crates/walkdir/2.5.0
+  Notices: licenses/cargo/walkdir-2.5.0/
+
+winapi-util 0.1.11 - Unlicense OR MIT
+  Source: https://crates.io/crates/winapi-util/0.1.11
+  Notices: licenses/cargo/winapi-util-0.1.11/
+
+windows-core 0.62.2 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/windows-core/0.62.2
+  Notices: licenses/cargo/windows-core-0.62.2/
+
+windows-implement 0.60.2 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/windows-implement/0.60.2
+  Notices: licenses/cargo/windows-implement-0.60.2/
+
+windows-interface 0.59.3 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/windows-interface/0.59.3
+  Notices: licenses/cargo/windows-interface-0.59.3/
+
+windows-link 0.2.1 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/windows-link/0.2.1
+  Notices: licenses/cargo/windows-link-0.2.1/
+
+windows-result 0.4.1 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/windows-result/0.4.1
+  Notices: licenses/cargo/windows-result-0.4.1/
+
+windows-strings 0.5.1 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/windows-strings/0.5.1
+  Notices: licenses/cargo/windows-strings-0.5.1/
+
+windows-sys 0.61.2 - MIT OR Apache-2.0
+  Source: https://crates.io/crates/windows-sys/0.61.2
+  Notices: licenses/cargo/windows-sys-0.61.2/
+
+writeable 0.6.4 - Unicode-3.0
+  Source: https://crates.io/crates/writeable/0.6.4
+  Notices: licenses/cargo/writeable-0.6.4/
+
+yoke 0.8.4 - Unicode-3.0
+  Source: https://crates.io/crates/yoke/0.8.4
+  Notices: licenses/cargo/yoke-0.8.4/
+
+yoke-derive 0.8.4 - Unicode-3.0
+  Source: https://crates.io/crates/yoke-derive/0.8.4
+  Notices: licenses/cargo/yoke-derive-0.8.4/
+
+zerocopy 0.8.63 - BSD-2-Clause OR Apache-2.0 OR MIT
+  Source: https://crates.io/crates/zerocopy/0.8.63
+  Notices: licenses/cargo/zerocopy-0.8.63/
+
+zerofrom 0.1.8 - Unicode-3.0
+  Source: https://crates.io/crates/zerofrom/0.1.8
+  Notices: licenses/cargo/zerofrom-0.1.8/
+
+zerofrom-derive 0.1.8 - Unicode-3.0
+  Source: https://crates.io/crates/zerofrom-derive/0.1.8
+  Notices: licenses/cargo/zerofrom-derive-0.1.8/
+
+zerotrie 0.2.5 - Unicode-3.0
+  Source: https://crates.io/crates/zerotrie/0.2.5
+  Notices: licenses/cargo/zerotrie-0.2.5/
+
+zerovec 0.11.9 - Unicode-3.0
+  Source: https://crates.io/crates/zerovec/0.11.9
+  Notices: licenses/cargo/zerovec-0.11.9/
+
+zerovec-derive 0.11.7 - Unicode-3.0
+  Source: https://crates.io/crates/zerovec-derive/0.11.7
+  Notices: licenses/cargo/zerovec-derive-0.11.7/
+
+zmij 1.0.23 - MIT
+  Source: https://crates.io/crates/zmij/1.0.23
+  Notices: licenses/cargo/zmij-1.0.23/
+
+zstd 0.13.3 - MIT
+  Source: https://crates.io/crates/zstd/0.13.3
+  Notices: licenses/cargo/zstd-0.13.3/
+
+zstd-safe 7.3.0 - BSD-3-Clause
+  Source: https://crates.io/crates/zstd-safe/7.3.0
+  Notices: licenses/cargo/zstd-safe-7.3.0/
+
+zstd-sys 2.1.2+zstd.1.5.7 - BSD-3-Clause
+  Source: https://crates.io/crates/zstd-sys/2.1.2+zstd.1.5.7
+  Notices: licenses/cargo/zstd-sys-2.1.2+zstd.1.5.7/
