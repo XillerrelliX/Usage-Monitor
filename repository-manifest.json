@@ -8,7 +8,7 @@
   ],
   "files": {
     ".gitattributes": "02fa0931f6b36a548ede208b6bf7a6ebf75f92969d3225af090688736a363696",
-    ".github/workflows/macos.yml": "bf13d2e118a8e957e1256fb539082ebe9144fe131a186fc89ccad5f10af5e6df",
+    ".github/workflows/macos.yml": "0a2ceae88890a8b9cee9344ed5aae06ddcc1a29989eb329af7eef7a2a8a57087",
     ".gitignore": "5516dd0b260988d85a46b65b38df6022337100dc8ad33c4122c90d3d5ba4336e",
     "Install-Usage-Monitor.cmd": "7b228b543f56e683b3847774383e62167bd5fc2c631597766d57c975e59297d1",
     "LICENSE": "c89c62d53c22b015f48835fe8b27b06ff3684e820a0dd347a638626e8e25593f",
