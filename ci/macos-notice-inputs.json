@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Notice and build-metadata extraction only; these archives are never shipped as the interpreter runtime.",
+  "checksumSource": "https://api.github.com/repos/astral-sh/python-build-standalone/releases/tags/20261026",
+  "platforms": {
+    "macos-aarch64": {
+      "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261026/cpython-3.14.10%2B20261026-aarch64-apple-darwin-pgo%2Blto-full.tar.zst",
+      "sha256": "137db511241f7693ddc57586af1744c7b6375982ab4c31c4a82d10115657d462"
+    },
+    "macos-x86_64": {
+      "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20261026/cpython-3.14.10%2B20261026-x86_64-apple-darwin-pgo%2Blto-full.tar.zst",
+      "sha256": "efce6e258263296b5a5476ab982b721590c7d25eac7636785a1a46d9bf1cf46b"
+    }
+  }
+}

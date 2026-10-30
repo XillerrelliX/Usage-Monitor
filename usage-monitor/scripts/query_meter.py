@@ -642,6 +642,10 @@ class Meter:
         command = [sys.executable, '-B', '-X', 'utf8', '-c', bridge, str(Path(__file__).parent),
                    str(Path(__file__).resolve()), 'watch', '--out', str(self.out), '--query-id', query_id,
                    '--timeout', str(timeout), '--interval', str(interval)]
+        # Preserve the verified Mac launcher's startup isolation in its hidden
+        # observer; user sitecustomize/PYTHONPATH must not become executable.
+        if sys.platform == 'darwin' and sys.flags.isolated:
+            command[1:1] = ['-I', '-S']
         if self.engine:
             command.extend(['--engine', str(self.engine)])
         options = {'stdin': subprocess.DEVNULL, 'stdout': subprocess.DEVNULL, 'stderr': subprocess.DEVNULL,

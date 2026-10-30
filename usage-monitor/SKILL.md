@@ -1,6 +1,6 @@
 ---
 name: usage-monitor
-description: Open Usage Monitor, a standalone local Codex token dashboard with a prebuilt Windows runtime, date/project/chat filters and verified accounting. Stored files do not prove device-only execution or account allowance.
+description: Open Usage Monitor, a standalone local Codex token dashboard with prebuilt Windows and macOS runtimes, date/project/chat filters and verified accounting. Stored files do not prove device-only execution or account allowance.
 ---
 
 # Usage Monitor
@@ -36,6 +36,8 @@ After both answers are explicit and supported, use the batched public command. A
 <skill>/Start-Usage-Monitor.cmd --codex-report --scope all --period today --today YYYY-MM-DD --timezone Europe/Berlin
 ```
 
+The command above is the Windows entry. On macOS, use `/bin/bash -p "<skill>/Start-Usage-Monitor.command"` with the same arguments. It selects Apple Silicon or Intel automatically; a repository installation downloads its pinned complete Mac package once, while an extracted Mac release already includes it. Do not use the legacy source-build setup path for a prebuilt Mac report.
+
 Replace the date and timezone with the current client context; these are parameters, not fixed defaults. The saved app timezone must agree. A mismatch needs clarification before scanning; do not silently change the setup or shift dates.
 
 - Scope: `all` for All usage; `chat` for This chat (resolved from `CODEX_THREAD_ID` inside the batch); `project --project-id <verified-id>` for This project. `selection` accepts repeated exact `--project-id` and/or `--chat-id` flags for a confirmed custom selection. Never infer a project from cwd. Resolve ambiguous names/assignments before execution; never pass a guessed ID.
@@ -44,7 +46,7 @@ Replace the date and timezone with the current client context; these are paramet
 
 The batch validates scope, dates, timezone and verified runtime, begins the optional request meter/watch, performs exactly one existing refresh, verifies the published report, obtains exact filtered totals, samples the same request once and returns its links. The scanner still updates its shared all-history cache; scope limits the result. All existing accounting, ownership, privacy and atomic-publication checks remain in force.
 
-**Codex write access:** The Windows batch writes settings, SQLite/cache lock files and report state outside the skill/workspace, normally under `%LOCALAPPDATA%\usage-monitor`. After scope and period are confirmed, request the required filesystem grant on the **first launcher invocation**. With `exec_command` in a restricted session, set `sandbox_permissions: "require_escalated"` on that call and provide a `justification` for writing Usage Monitor's local data folder and report output. Keep the confirmed arguments and any explicitly selected `--config` unchanged. Do not first run with `use_default` or perform a separate scan/write probe.
+**Codex write access:** The batch writes settings, SQLite/cache lock files and report state outside the skill/workspace, normally under `%LOCALAPPDATA%\usage-monitor` on Windows or `~/Library/Application Support/usage-monitor` on macOS. A first Mac repository launch also downloads its verified package into that local folder. After scope and period are confirmed, request the required filesystem grant on the **first launcher invocation**, plus network access if that initial Mac download is needed. With `exec_command` in a restricted session, set `sandbox_permissions: "require_escalated"` on that call and provide a `justification` for writing Usage Monitor's local data folder and report output. Keep the confirmed arguments and any explicitly selected `--config` unchanged. Do not first run with `use_default` or perform a separate scan/write probe.
 
 Use Codex's approval flow; this does not require Windows administrator elevation or changes to ACLs/global sandbox settings. If the required grant is denied or unavailable, stop and report the blocker, retaining the confirmed selections. Do not switch sources or output folders to avoid it.
 
@@ -70,10 +72,10 @@ For an explicit query-meter-only request or meter diagnosis, read [query measure
 
 ## Local operation and maintenance
 
-The complete Windows x64 package includes verified Python, timezone data and the pinned scanner. It needs no system Python/compiler, account connection or runtime download. Double-click `Start-Usage-Monitor.cmd` for standalone use; run it again for new usage. Browser filters and the local scanner make zero model calls. The Codex conversation still uses tokens. macOS/Linux source builds are separate and unverified here.
+The complete Windows x64 and macOS Apple Silicon/Intel packages include verified Python, timezone data and the pinned-source scanner. They need no system Python/compiler or account connection. Use `Start-Usage-Monitor.cmd` on Windows or `Start-Usage-Monitor.command` on macOS for standalone use; run it again for new usage. The Mac repository entry downloads its verified architecture package once; extracted release packages need no runtime download. Browser filters and the local scanner make zero model calls. The Codex conversation still uses tokens. Linux source builds remain separate and unverified here.
 
 The live dashboard is served only on protected `127.0.0.1`; the helper exits after an hour without activity. `dashboard`/`fileDashboardUrl` are saved snapshots. Preserve initial selections when copying a view. Unknown IDs/invalid dates must fail instead of broadening. Export CSV stays below Chats; preserve the user's current simplified navy/mint UI.
 
 Never upload logs, caches or reports, publish the dashboard, read auth.json/cookies/account identities, or load raw logs, messages, complete ledgers, HTML or chat lists into model context. The native parser necessarily reads selected local rollout files in its own process and retains only approved numeric/lineage metadata. Named-project attribution and guardian/chat/agent ownership follow verified metadata. Stored or synced files do not prove execution on this device or the selected account.
 
-For code changes/diagnosis read [accounting and validation](references/accounting.md), the complete [native contract](native/README.md), and only the relevant implementation. Preserve mandatory tests and independent final review; ordinary checks never repeat these developer gates. For setup, explicit legacy cache reading, source selection or public distribution read [Windows package contract](references/windows-package.md). Public exports must contain only declared code/runtime/licenses, never private settings/history/reports. Do not bypass manifest verification or publish/upload without explicit authorization.
+For code changes/diagnosis read [accounting and validation](references/accounting.md), the complete [native contract](native/README.md), and only the relevant implementation. Preserve mandatory tests and independent final review; ordinary checks never repeat these developer gates. For setup, explicit legacy cache reading, source selection or public distribution read the relevant [Windows package contract](references/windows-package.md) or [Mac package contract](references/macos-package.md). Public exports must contain only declared code/runtime/licenses, never private settings/history/reports. Do not bypass manifest verification or publish/upload without explicit authorization.

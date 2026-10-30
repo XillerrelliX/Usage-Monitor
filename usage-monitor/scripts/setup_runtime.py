@@ -298,7 +298,11 @@ def ensure_engine(package_root, runtime_dir, prepare_only=False) -> dict:
     package_root, runtime = Path(package_root).resolve(), Path(runtime_dir).expanduser().resolve()
     if ((runtime / "prebuilt-manifest.json").is_file() or (runtime / "prebuilt-required").exists()
             or (package_root / "bundle-manifest.json").is_file()):
-        from prebuilt_runtime import resolve_prebuilt
+        from macos_runtime import is_macos_bundle
+        if is_macos_bundle(package_root):
+            from macos_runtime import resolve_prebuilt
+        else:
+            from prebuilt_runtime import resolve_prebuilt
         return resolve_prebuilt(package_root, runtime)
     python_packages = None if prepare_only else ensure_timezone_data(runtime, package_root)
     suffix = ".exe" if os.name == "nt" else ""

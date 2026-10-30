@@ -9,6 +9,22 @@ import sys
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
 
 
+def _package_api(root=PACKAGE_ROOT):
+    from macos_runtime import is_macos_bundle
+    if is_macos_bundle(root):
+        from macos_package import verify_bundle, reexport_bundle
+        from macos_runtime import resolve_prebuilt
+    else:
+        from windows_package import verify_bundle, reexport_bundle
+        from prebuilt_runtime import resolve_prebuilt
+    return verify_bundle, reexport_bundle, resolve_prebuilt
+
+
+def _package_label(root):
+    from macos_runtime import is_macos_bundle
+    return 'macOS' if is_macos_bundle(root) else 'Windows'
+
+
 def _local_path(value):
     value = Path(value).expanduser()
     if str(value).startswith('\\\\'):
@@ -23,8 +39,7 @@ def main(argv=None):
             from codex_report import parse_arguments, run_report, ReportError
             report_args = parse_arguments(arguments)
             _local_path(PACKAGE_ROOT)
-            from windows_package import verify_bundle
-            from prebuilt_runtime import resolve_prebuilt
+            verify_bundle, _, resolve_prebuilt = _package_api(PACKAGE_ROOT)
             verify_bundle(PACKAGE_ROOT)
             installed = resolve_prebuilt(PACKAGE_ROOT, PACKAGE_ROOT / 'runtime')
             if installed['pythonPackages'] not in sys.path:
@@ -42,14 +57,13 @@ def main(argv=None):
     if arguments[:1] == ['--query-meter']:
         try:
             _local_path(PACKAGE_ROOT)
-            from windows_package import verify_bundle
-            from prebuilt_runtime import resolve_prebuilt
+            verify_bundle, _, resolve_prebuilt = _package_api(PACKAGE_ROOT)
             verify_bundle(PACKAGE_ROOT)
             installed = resolve_prebuilt(PACKAGE_ROOT, PACKAGE_ROOT / 'runtime')
             if installed['pythonPackages'] not in sys.path:
                 sys.path.insert(0, installed['pythonPackages'])
             if '--engine' in arguments[1:] or any(value.startswith('--engine=') for value in arguments[1:]):
-                raise ValueError('The Windows query meter uses its verified shipped engine.')
+                raise ValueError('The ' + _package_label(PACKAGE_ROOT) + ' query meter uses its verified shipped engine.')
             from query_meter import main as query_main
             meter_arguments = arguments[1:]
             if meter_arguments and meter_arguments[0] not in {'--help', '-h'}:
@@ -65,7 +79,7 @@ def main(argv=None):
             ('codex-home', 'Local Codex home; uses your saved choice, CODEX_HOME or ~/.codex.'),
             ('cache-file', 'Local canonical ledger cache.'),
             ('project-state', 'Optional local project metadata JSON.'),
-            ('export', 'Export the public Windows bundle ZIP without personal data.')):
+            ('export', 'Export the public ' + _package_label(PACKAGE_ROOT) + ' bundle ZIP without personal data.')):
         parser.add_argument('--' + name, type=Path, help=help_text)
     parser.add_argument('--names-database', type=Path, action='append', help='Optional local sidebar name database.')
     parser.add_argument('--timezone', help='IANA timezone for local day boundaries.')
@@ -84,8 +98,7 @@ def main(argv=None):
                 setattr(args, name, _local_path(value))
         if args.names_database:
             args.names_database = [_local_path(value) for value in args.names_database]
-        from windows_package import verify_bundle, reexport_bundle
-        from prebuilt_runtime import resolve_prebuilt
+        verify_bundle, reexport_bundle, resolve_prebuilt = _package_api(PACKAGE_ROOT)
         verify_bundle(PACKAGE_ROOT)
         installed = resolve_prebuilt(PACKAGE_ROOT, PACKAGE_ROOT / 'runtime')
         if args.export:
@@ -156,7 +169,7 @@ def main(argv=None):
         original_action = report_from_app.REFRESH_ACTION
         report_from_app.REFRESH_ACTION = (
             'Run Usage Monitor again; if the error persists, keep the previous data '
-            'and re-extract the verified Windows package.')
+            'and re-extract the verified ' + _package_label(PACKAGE_ROOT) + ' package.')
         try:
             return refresh(arguments)
         finally:

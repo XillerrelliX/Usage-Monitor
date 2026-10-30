@@ -5,6 +5,9 @@ usage_scripts=$(CDPATH= cd -P "$(dirname "$0")" && pwd)
 usage_root=$(dirname "$usage_scripts")
 usage_system=$(uname -s)
 usage_arch=$(uname -m)
+if [ "$usage_system" = Darwin ] && [ -f "$usage_root/Start-Usage-Monitor.command" ]; then
+  exec /bin/bash -p "$usage_root/Start-Usage-Monitor.command" "$@"
+fi
 case "$usage_system:$usage_arch" in
   Darwin:x86_64) usage_key=macos-x86_64 ;;
   Darwin:arm64) usage_key=macos-aarch64 ;;

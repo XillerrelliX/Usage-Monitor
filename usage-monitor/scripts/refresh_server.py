@@ -268,8 +268,8 @@ def _locked(path, timeout=START_TIMEOUT):
 
 
 def _verified_python(package_root):
-    from windows_package import verify_bundle
-    from prebuilt_runtime import resolve_prebuilt
+    from standalone_app import _package_api
+    verify_bundle, _, resolve_prebuilt = _package_api(package_root)
     verify_bundle(package_root)
     installed = resolve_prebuilt(package_root, package_root / 'runtime')
     # A fresh embedded helper has its own isolated sys.path. Load only the
@@ -277,7 +277,7 @@ def _verified_python(package_root):
     packages = installed['pythonPackages']
     if packages not in sys.path:
         sys.path.insert(0, packages)
-    python = _local_path(package_root / 'runtime/python/python.exe')
+    python = _local_path(installed.get('python') or package_root / 'runtime/python/python.exe')
     if not python.is_file():
         raise RefreshError('refresh_unavailable')
     return python
@@ -297,7 +297,9 @@ def _python_command(python, package_root, script, *, gate=False):
                "sys.exit(1) if permit!=b'R' else None; ") if gate else ''
     bridge = (barrier + "import runpy,sys; p=sys.argv.pop(1); sys.path.insert(0,p); "
               "runpy.run_path(p+'/" + script + "',run_name='__main__')")
-    return [str(python), '-B', '-X', 'utf8', '-c', bridge, str(package_root / 'scripts')]
+    from macos_runtime import is_macos_bundle
+    isolated = ['-I', '-S'] if is_macos_bundle(package_root) else []
+    return [str(python), *isolated, '-B', '-X', 'utf8', '-c', bridge, str(package_root / 'scripts')]
 
 
 @contextmanager

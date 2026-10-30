@@ -11,3 +11,6 @@
 /usage-monitor/dashboard/
 /usage-monitor/offline-source.sqlite*
 /usage-monitor/query-usage/
+**/node_modules/
+**/test-results/
+**/playwright-report/

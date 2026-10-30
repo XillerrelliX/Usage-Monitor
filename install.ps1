@@ -10,7 +10,7 @@ param(
 
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
-$BundleHash = 'ade8bf937261eeb212f9495749eeeb1d7038f2a541e8c99be062d3e3bcc58f50'
+$BundleHash = '76ccfb2bea2788358c85389de171ea8fed281d231febf4cd4770e85ab8c9f72c'
 $EngineHash = 'fd6b9ab7f014e5e180c7bab14ee079763c6db07a7cccc48b59ff0da2b12adb37'
 $NativeHash = '914f2747432d3395b22e66d4417da9969565d65932b0eb673f62dac4463f0684'
 $SourceCommit = '6bd0eed7b108497aa50051580387345340e3167f'

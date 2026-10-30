@@ -1,6 +1,6 @@
-# Usage Monitor for Windows
+# Usage Monitor for Windows and macOS
 
-A local Codex token dashboard and installable Codex skill. This repository contains the complete Windows x64 application, including portable Python, timezone data, the verified native scanner and all license notices.
+A local Codex token dashboard and installable Codex skill. Windows x64 includes its portable runtime. On macOS, the launcher selects Apple Silicon or Intel and downloads the verified Mac package once; later use stays offline. No system Python or compiler is needed.
 
 ## Install in Codex from GitHub
 

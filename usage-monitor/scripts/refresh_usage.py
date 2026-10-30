@@ -53,11 +53,12 @@ def package_files(root=PACKAGE_ROOT):
     root = Path(root).resolve()
     files = []
     for name in ('SKILL.md', 'refresh.cmd', 'refresh.sh', 'setup.cmd', 'setup.sh',
-                 'Start-Usage-Monitor.cmd', 'README.md', 'LICENSE', '.gitattributes', '.gitignore'):
+                 'Start-Usage-Monitor.cmd', 'Start-Usage-Monitor.command',
+                 'README.md', 'LICENSE', '.gitattributes', '.gitignore'):
         path = root/name
         if path.is_file():
             files.append(path)
-    for directory, suffixes in (('scripts', {'.py', '.ps1', '.sh'}), ('assets', {'.html', '.js'}),
+    for directory, suffixes in (('scripts', {'.py', '.ps1', '.sh', '.command'}), ('assets', {'.html', '.js'}),
                                 ('tests', {'.py', '.mjs'})):
         folder = root/directory
         if folder.is_dir():
@@ -76,6 +77,9 @@ def package_files(root=PACKAGE_ROOT):
     windows_reference = root/'references/windows-package.md'
     if windows_reference.is_file():
         files.append(windows_reference)
+    macos_reference = root/'references/macos-package.md'
+    if macos_reference.is_file():
+        files.append(macos_reference)
     query_reference = root/'references/query-meter.md'
     if query_reference.is_file():
         files.append(query_reference)

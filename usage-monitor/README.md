@@ -1,9 +1,19 @@
 # Usage Monitor
 
 A local Codex token-usage dashboard and optional Codex skill. The prebuilt
-Windows x64 package includes its own Python runtime, timezone data and tested
+Windows x64 and macOS Apple Silicon/Intel packages include their own Python runtime, timezone data and
 native scanner. It needs no Codex Usage Desktop installation, system Python,
 Rust, compiler, API key, account connection or runtime downloads.
+
+## macOS
+
+Use the Apple Silicon or Intel Mac ZIP, keeping its complete folder together,
+and open **Start-Usage-Monitor.command**. A Codex installation from this GitHub
+repository selects the matching Mac package and verifies its one-time download;
+subsequent use is offline. Settings and reports live under
+`~/Library/Application Support/usage-monitor`, outside the application folder.
+See the [Mac package contract](references/macos-package.md) for invocation,
+integrity checks, test coverage and first-launch limitations.
 
 ## Windows
 
@@ -104,7 +114,8 @@ a shared account. These counts are not account quota or credit balances.
 
 See [accounting checks](references/accounting.md), the
 [native source contract](native/README.md) and
-[Windows packaging](references/windows-package.md). Keep every existing
+[Windows packaging](references/windows-package.md) and
+[Mac packaging](references/macos-package.md). Keep every existing
 accounting gate when changing code. Native source and binary provenance is
 recorded in manifests; the Windows launcher verifies its shipped files before
 execution. A checksum is an integrity check, not a publisher signature.

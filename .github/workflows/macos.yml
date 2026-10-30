@@ -1,0 +1,89 @@
+name: Mac packages and cross-platform tests
+
+on:
+  push:
+    branches: [feature/macos-packages]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: macos-validation-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  macos:
+    name: ${{ matrix.platform }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            platform: macos-aarch64
+          - runner: macos-15-intel
+            platform: macos-x86_64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 60
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      RUSTUP_TOOLCHAIN: 1.90.0
+      CARGO_TARGET_DIR: ${{ runner.temp }}/usage-native-target
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.14'
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - name: Prepare test tools
+        run: |
+          rustup toolchain install 1.90.0 --profile minimal
+          command -v zstd || brew install zstd
+          npm ci --prefix ci
+          cd ci
+          npx playwright install chromium webkit
+      - name: Build and test the actual Mac package
+        run: >-
+          python -B -X utf8 ci/build_and_test_macos.py
+          --platform '${{ matrix.platform }}'
+          --artifacts-dir '${{ runner.temp }}/usage-artifacts-${{ matrix.platform }}'
+          --browser-node "$(command -v node)"
+      - name: Preserve packages and complete test evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: usage-monitor-${{ matrix.platform }}
+          path: ${{ runner.temp }}/usage-artifacts-${{ matrix.platform }}/publish/
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+  windows:
+    name: Windows regression tests
+    runs-on: windows-2025
+    timeout-minutes: 45
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.14'
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+      - name: Test the unchanged Windows engine with the shared application
+        run: python -B -X utf8 ci/windows_gate.py --artifacts-dir '${{ runner.temp }}/usage-artifacts-windows'
+      - name: Preserve Windows regression evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: usage-monitor-windows-tests
+          path: ${{ runner.temp }}/usage-artifacts-windows/publish/
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
