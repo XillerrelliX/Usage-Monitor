@@ -8,7 +8,7 @@
   ],
   "files": {
     ".gitattributes": "02fa0931f6b36a548ede208b6bf7a6ebf75f92969d3225af090688736a363696",
-    ".github/workflows/macos.yml": "2b0302c44e20dbd121017398ab10ac77778b8909a08d275e7c19f9fd7a745579",
+    ".github/workflows/macos.yml": "cd2e0bcae328c20571fdc594f68d4153c74eb53a450f437b8006733e41ae5ac6",
     ".gitignore": "5516dd0b260988d85a46b65b38df6022337100dc8ad33c4122c90d3d5ba4336e",
     "Install-Usage-Monitor.cmd": "7b228b543f56e683b3847774383e62167bd5fc2c631597766d57c975e59297d1",
     "LICENSE": "c89c62d53c22b015f48835fe8b27b06ff3684e820a0dd347a638626e8e25593f",
@@ -23,6 +23,7 @@
     "ci/package.json": "566c33e8495757df489fe9436c1c02fc3cef50a39dafe8cdfa9a2771229ba04c",
     "ci/run_original_test.py": "a13c6535e8e27c7d9606c93d04af418233951460fef16d7a1038bc69b13b7efd",
     "ci/run_python_tests.py": "649a9d64ab854f08cea72d365288381a18721caf7d4f686365ed0aac845746d9",
+    "ci/windows-resume-baseline.json": "e78e7df6c0f46740526d52ca04dfbea4928885b871aebded8de50468ba1271e9",
     "ci/windows_gate.py": "1cdac7d10fff0eb6093f34d697561532be3a0ffb1be1630aba6735994350b656",
     "ci/windows_resume.py": "fd793c2b153cc28bb5d9d22f6aa65ca381da2c285eee15f885958453b2914346",
     "install.ps1": "14a22476b0fc45d517d074a4e59ae21a3a740eddb293b7681d4b3f4aeabb3566",

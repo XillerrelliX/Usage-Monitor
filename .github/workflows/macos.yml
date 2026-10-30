@@ -93,21 +93,25 @@ jobs:
         run: python -B -X utf8 ci/windows_gate.py --artifacts-dir '${{ runner.temp }}/usage-artifacts-windows'
       - name: Retrieve the exact previous full Windows coverage
         if: ${{ contains(github.event.head_commit.message, '[windows-resume]') }}
+        id: baseline
+        shell: pwsh
+        run: |
+          $baseline = Get-Content -LiteralPath ci/windows-resume-baseline.json -Raw | ConvertFrom-Json
+          Add-Content -LiteralPath $env:GITHUB_OUTPUT -Value "runId=$($baseline.runId)"
+      - name: Download the pinned Windows baseline
+        if: ${{ contains(github.event.head_commit.message, '[windows-resume]') }}
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: usage-monitor-windows-tests
-          run-id: 41043105782
+          run-id: ${{ steps.baseline.outputs.runId }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path: ${{ runner.temp }}/windows-baseline
       - name: Complete the single failed original method and preserve prior successes
         if: ${{ contains(github.event.head_commit.message, '[windows-resume]') }}
-        run: >-
-          python -B -X utf8 ci/windows_resume.py
-          --baseline-evidence-zip '${{ runner.temp }}/windows-baseline/validation-evidence.zip'
-          --baseline-sha256 ab3301ac52d3e3b1b98e710770b66f5923e529db8910a2d6c92ee800bd62e0f7
-          --baseline-source-commit 527d070f025622868d745c3c67761f531bb87c62
-          --baseline-run-id 41043105782
-          --artifacts-dir '${{ runner.temp }}/usage-artifacts-windows'
+        run: |
+          $baseline = Get-Content -LiteralPath ci/windows-resume-baseline.json -Raw | ConvertFrom-Json
+          python -B -X utf8 ci/windows_resume.py --baseline-evidence-zip '${{ runner.temp }}/windows-baseline/validation-evidence.zip' --baseline-sha256 $baseline.evidenceSha256 --baseline-source-commit $baseline.sourceCommit --baseline-run-id $baseline.runId --artifacts-dir '${{ runner.temp }}/usage-artifacts-windows'
+          exit $LASTEXITCODE
       - name: Preserve Windows regression evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
