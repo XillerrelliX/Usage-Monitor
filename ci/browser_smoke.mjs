@@ -97,11 +97,13 @@ try {
         // Exercise the ordinary sidecar loader against actual packaged output.
         // Only pending is explicitly a UI contract fixture (the producer emits
         // provisional immediately); origins are retained in browser evidence.
-        fs.copyFileSync(state.file, fixture.queryLatest);
+        fs.copyFileSync(state.file, fixture.queryLatest + '.tmp');
+        fs.renameSync(fixture.queryLatest + '.tmp', fixture.queryLatest);
         await page.waitForFunction(expected => document.querySelector('#query-meter')?.dataset.status === expected,
                                    state.status, {timeout: 15000});
         assert.equal(await page.locator('#query-meter-value').innerText(), state.value);
-        if (state.note) assert.ok((await page.locator('#query-meter-note').innerText()).includes(state.note));
+        if (state.note) assert.ok((await page.evaluate(() =>
+          window.UsageQueryMeter.describe(window.USAGE_QUERY_METER).note)).includes(state.note));
         const before = await vector();
         await apply({...selection, chats: [fixture.root], projects: []});
         assert.equal(await page.locator('#query-meter-value').innerText(), state.value);

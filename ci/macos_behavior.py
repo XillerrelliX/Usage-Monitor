@@ -311,7 +311,7 @@ class MacPublicPackageTests(unittest.TestCase):
         # UI fixture, distinct from the three actual production result sidecars.
         pending = saved / 'pending-ui-contract.js'
         pending.write_text('window.USAGE_QUERY_METER=' + json.dumps({'schemaVersion': 1, 'status': 'pending',
-                           'coverage': 'turn-start', 'registeredTurns': 1}) + ';\n', encoding='utf-8')
+                           'queryId': begun['queryId'], 'coverage': 'turn-start', 'registeredTurns': 1}) + ';\n', encoding='utf-8')
         return [{'file': str(pending), 'status': 'pending', 'value': 'Measuring…', 'origin': 'UI contract fixture'},
                 {'file': str(provisional), 'status': 'provisional', 'value': '20 tokens so far', 'origin': 'public packaged query entry'},
                 {'file': str(final), 'status': 'complete', 'value': '50 tokens', 'origin': 'public packaged query entry'},
