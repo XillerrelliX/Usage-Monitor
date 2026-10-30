@@ -2,23 +2,18 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import os
 from pathlib import Path
 import re
 import shutil
-import subprocess
 import sys
 import zipfile
 
 from common import (Evidence, digest, native_environment, pinned_input, run_browser_projection_tests,
                     test_temporary_environment, write_json)
 from run_original_test import TARGET
-
-
-def git(*arguments, cwd):
-    return subprocess.check_output(['git', *arguments], cwd=cwd)
+from public_fixture import git, stage_public_fixture
 
 
 def load_baseline(archive, expected_sha, commit, evidence, run_id):
@@ -61,49 +56,8 @@ def load_baseline(archive, expected_sha, commit, evidence, run_id):
 
 
 def stage_full_fixture(source, commit, destination, evidence):
-    repository = Path(git('rev-parse', '--show-toplevel', cwd=source).decode().strip()).resolve()
-    prefix = source.relative_to(repository).as_posix()
-    for arguments in (('diff', '--quiet', commit, 'HEAD', '--', prefix),
-                      ('diff', '--quiet', 'HEAD', '--', prefix)):
-        if subprocess.run(['git', *arguments], cwd=repository).returncode:
-            raise ValueError('Application/native/test source differs from the prior completed Windows run')
-    if git('ls-files', '--others', '--exclude-standard', '--', prefix, cwd=repository).strip():
-        raise ValueError('Untracked application files cannot enter the retry fixture')
-    tree = git('ls-tree', '-r', '-z', commit, '--', prefix, cwd=repository)
-    tracked = {}
-    for entry in tree.split(b'\0'):
-        if not entry:
-            continue
-        attributes, raw_name = entry.split(b'\t', 1)
-        mode, kind, blob = attributes.decode().split()
-        if kind != 'blob' or mode not in ('100644', '100755'):
-            raise ValueError('Only ordinary tracked public files may enter the retry fixture')
-        name = raw_name.decode('utf-8')
-        tracked[name.removeprefix(prefix + '/')] = blob
-    actual = {path.relative_to(source).as_posix() for path in source.rglob('*') if path.is_file()}
-    if actual != set(tracked) or any(path.is_symlink() for path in source.rglob('*')):
-        raise ValueError('The checked-out public source is not the complete byte-verifiable prior file set')
-    original = {}
-    for relative, blob in sorted(tracked.items()):
-        payload = (source / relative).read_bytes()
-        actual_blob = hashlib.sha1(b'blob ' + str(len(payload)).encode() + b'\0' + payload).hexdigest()
-        if actual_blob != blob:
-            raise ValueError('Current public file bytes differ from the prior commit: ' + relative)
-        original[relative] = {'sha256': hashlib.sha256(payload).hexdigest(), 'gitBlobSha1': blob}
-    # Only the existing legal-notice tree is omitted, so the original broad
-    # no-toolchain assertion can distinguish its own newly created dependencies.
-    shutil.copytree(source, destination, ignore=lambda directory, names:
-                    ['licenses'] if Path(directory).resolve() == source and 'licenses' in names else [])
-    expected = {name: item for name, item in original.items() if not name.startswith('licenses/')}
-    staged = {path.relative_to(destination).as_posix(): digest(path)
-              for path in destination.rglob('*') if path.is_file()}
-    if staged != {name: item['sha256'] for name, item in expected.items()}:
-        raise ValueError('Staged fixture changed bytes beyond the one approved licenses/ omission')
-    mapping = {'sourceCommit': commit, 'fixtureOmissions': ['licenses/'], 'originalFiles': original,
-               'stagedFiles': staged, 'sourceDirectory': str(source), 'fixtureDirectory': str(destination)}
-    write_json(evidence.directory / 'fixture-source-map.json', mapping)
-    evidence.value['fixture'] = {'omissions': ['licenses/'], 'originalFiles': len(original),
-        'stagedFiles': len(staged), 'mapSha256': digest(evidence.directory / 'fixture-source-map.json')}
+    evidence.value['fixture'] = stage_public_fixture(source, commit, destination,
+                                                    evidence.directory / 'fixture-source-map.json')
     evidence.save()
     return destination
 

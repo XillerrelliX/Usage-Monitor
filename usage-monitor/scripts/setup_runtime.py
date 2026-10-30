@@ -196,8 +196,14 @@ def source_hash(package_root: Path) -> str:
     hasher = hashlib.sha256()
     native = package_root / "native"
     paths = [native / "Cargo.toml", native / "Cargo.lock"]
-    paths += sorted(path for path in native.rglob("*") if path.is_file() and path.suffix in {".rs", ".json", ".toml"} and "target" not in path.relative_to(native).parts)
-    for path in sorted(set(paths)):
+    paths += [path for path in native.rglob("*") if path.is_file() and path.suffix in {".rs", ".json", ".toml"} and "target" not in path.relative_to(native).parts]
+    # Preserve the published Windows identity on every host. WindowsPath sorts
+    # case-insensitive components; PosixPath sorts case-sensitive components.
+    # Keep original path spelling in the digest, and compare whole components
+    # so a directory remains ordered before a similarly prefixed filename.
+    def path_order(path):
+        return tuple(part.casefold() for part in path.relative_to(package_root).parts)
+    for path in sorted(set(paths), key=path_order):
         if not path.is_file():
             raise RuntimeError("Missing native source: " + str(path))
         hasher.update(path.relative_to(package_root).as_posix().encode("utf-8") + b"\0")
