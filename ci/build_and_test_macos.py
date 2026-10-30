@@ -11,7 +11,8 @@ import shutil
 import subprocess
 import sys
 
-from common import Evidence, native_environment, pinned_input, test_temporary_environment, write_json
+from common import (Evidence, native_environment, pinned_input, run_browser_projection_tests,
+                    test_temporary_environment, write_json)
 
 
 def rust_cases(output):
@@ -110,12 +111,7 @@ def main():
         env['CARGO_TARGET_DIR'] = str(target)
         evidence.run('python-full-discovery', [sys.executable, '-B', '-X', 'utf8', Path(__file__).with_name('run_python_tests.py'),
                      '--source-root', source, '--output', evidence.directory / 'python-tests.json'], env=env)
-        browser_tests = sorted((source / 'tests').glob('*.mjs'))
-        if len(browser_tests) < 6:
-            raise RuntimeError('Browser test discovery lost a required source test')
-        evidence.value['browserProjectionTests'] = [path.name for path in browser_tests]
-        for path in browser_tests:
-            evidence.run(path.stem, [node, path], env=env)
+        run_browser_projection_tests(evidence, source, node, evidence.directory / 'python-tests.json', env=env)
         archive = evidence.directory / ('Usage-Monitor-Mac-' + ('Apple-Silicon' if args.platform.endswith('aarch64') else 'Intel') + '.zip')
         host = {'macos-aarch64': 'aarch64-apple-darwin', 'macos-x86_64': 'x86_64-apple-darwin'}[args.platform]
         metadata = evidence.run('macos-cargo-license-metadata', ['cargo', 'metadata', *cargo[1:], '--format-version', '1',

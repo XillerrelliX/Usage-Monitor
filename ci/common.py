@@ -144,3 +144,43 @@ def test_temporary_environment(evidence, source):
         'reason': 'Canonical paths avoid macOS /var aliases and short Windows paths avoid fixture MAX_PATH failures.'}
     evidence.save()
     return environment
+
+
+PARITY_CASES = (
+    'test_multiselect_parity.MultiselectParityTests.test_exact_safe_integer_boundary_for_multiple_record_slices',
+    'test_multiselect_parity.MultiselectParityTests.test_named_project_all_unions_chat_intersections_and_sparse_dates',
+)
+
+
+def run_browser_projection_tests(evidence, source, node, python_evidence, *, env):
+    """Run standalone scripts; bind stdin-only parity to its actual Python producers."""
+    source, python_evidence = Path(source), Path(python_evidence)
+    node = Path(node)
+    if not node.is_file():
+        raise RuntimeError('Node is required; no browser tests may be skipped')
+    files = sorted((source / 'tests').glob('*.mjs'))
+    if len(files) < 6:
+        raise RuntimeError('Browser test discovery lost a required source test')
+    evidence.value['browserProjectionTests'] = [path.name for path in files]
+    results = json.loads(python_evidence.read_text(encoding='utf-8'))
+    if results.get('status') != 'passed':
+        raise RuntimeError('Parity coverage requires successful complete/composite Python evidence')
+    cases = results.get('cases', [])
+    covered = []
+    for identity in PARITY_CASES:
+        matches = [item for item in cases if item.get('id') == identity]
+        if len(matches) != 1 or matches[0].get('status') != 'passed':
+            raise RuntimeError('Required original Python/Node parity case did not pass: ' + identity)
+        covered.append({'id': identity, 'sourceRun': matches[0].get('sourceRun') or results.get('sourceRun') or
+                        {'sourceCommit': evidence.value['sourceCommit'], 'mode': 'current-full-python-suite'}})
+    for path in files:
+        if path.name != 'test_multiselect_parity.mjs':
+            evidence.run(path.stem, [node, path], env=env)
+            continue
+        item = {'name': path.stem, 'status': 'passed', 'exitCode': 0,
+                'coverageMode': 'included-in-full-python-suite', 'coveredBy': covered,
+                'scriptSha256': digest(path), 'producerSha256': digest(source / 'tests/test_multiselect_parity.py'),
+                'pythonEvidenceSha256': digest(python_evidence), 'node': str(node)}
+        write_json(evidence.directory / 'node-parity-coverage.json', item)
+        evidence.value['steps'].append(item)
+        evidence.save()

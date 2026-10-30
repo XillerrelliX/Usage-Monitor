@@ -9,7 +9,8 @@ import shutil
 import subprocess
 import sys
 
-from common import Evidence, native_environment, pinned_input, test_temporary_environment
+from common import (Evidence, native_environment, pinned_input, run_browser_projection_tests,
+                    test_temporary_environment)
 
 
 def main():
@@ -41,12 +42,7 @@ def main():
         node = shutil.which('node')
         if not node:
             raise RuntimeError('Node is required; no browser tests may be skipped')
-        files = sorted((source / 'tests').glob('*.mjs'))
-        if len(files) < 6:
-            raise RuntimeError('Browser test discovery lost a required source test')
-        evidence.value['browserProjectionTests'] = [path.name for path in files]
-        for path in files:
-            evidence.run(path.stem, [node, path], env=env)
+        run_browser_projection_tests(evidence, source, node, evidence.directory / 'python-tests.json', env=env)
         evidence.value['status'] = 'passed'
         return 0
     except BaseException as exc:
