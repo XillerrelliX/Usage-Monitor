@@ -44,6 +44,10 @@ Replace the date and timezone with the current client context; these are paramet
 
 The batch validates scope, dates, timezone and verified runtime, begins the optional request meter/watch, performs exactly one existing refresh, verifies the published report, obtains exact filtered totals, samples the same request once and returns its links. The scanner still updates its shared all-history cache; scope limits the result. All existing accounting, ownership, privacy and atomic-publication checks remain in force.
 
+**Codex write access:** The Windows batch writes settings, SQLite/cache lock files and report state outside the skill/workspace, normally under `%LOCALAPPDATA%\usage-monitor`. After scope and period are confirmed, request the required filesystem grant on the **first launcher invocation**. With `exec_command` in a restricted session, set `sandbox_permissions: "require_escalated"` on that call and provide a `justification` for writing Usage Monitor's local data folder and report output. Keep the confirmed arguments and any explicitly selected `--config` unchanged. Do not first run with `use_default` or perform a separate scan/write probe.
+
+Use Codex's approval flow; this does not require Windows administrator elevation or changes to ACLs/global sandbox settings. If the required grant is denied or unavailable, stop and report the blocker, retaining the confirmed selections. Do not switch sources or output folders to avoid it.
+
 When invoking the launcher from PowerShell, finish that shell command with `exit $LASTEXITCODE` so the native warning exit code 2 is preserved.
 
 Keep process waiting inside the same tool execution. With `functions.exec`, await `tools.exec_command`, then await `tools.write_stdin` while that returned session remains active; expose only terminal compact stdout and material errors. If the orchestration itself yields, resume that same cell/session, using bounded waits of at most 60 seconds. Never launch the command again merely because it is still running. Send a concise progress update if needed without opening another lookup or scan.
