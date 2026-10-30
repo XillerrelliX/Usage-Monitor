@@ -33,15 +33,24 @@ def flatten(suite):
             yield test
 
 
+def canonical_host_python():
+    """Expose the actual host executable to fixtures that validate local paths."""
+    reported = sys.executable
+    resolved = str(Path(reported).resolve(strict=True))
+    sys.executable = resolved
+    return {'reported': reported, 'resolved': resolved}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source-root', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--minimum-tests', type=int, default=351)
     args = parser.parse_args()
+    host_python = canonical_host_python()
     suite = unittest.defaultTestLoader.discover(str(args.source_root / 'tests'))
     identities = [test.id() for test in flatten(suite)]
-    document = {'discovered': len(identities), 'discoveredIds': identities, 'cases': []}
+    document = {'discovered': len(identities), 'discoveredIds': identities, 'cases': [], 'hostPython': host_python}
     write_json(args.output, document)
 
     class Result(unittest.TextTestResult):

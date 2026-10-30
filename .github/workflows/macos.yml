@@ -17,11 +17,12 @@ permissions:
   contents: read
 
 concurrency:
-  group: macos-validation-${{ github.ref }}
+  group: macos-validation-${{ github.ref }}-${{ contains(github.event.head_commit.message, '[mac-validation-only]') && 'mac' || contains(github.event.head_commit.message, '[windows-validation-only]') && 'windows' || 'all' }}
   cancel-in-progress: true
 
 jobs:
   macos:
+    if: ${{ !contains(github.event.head_commit.message, '[windows-validation-only]') }}
     name: ${{ matrix.platform }}
     strategy:
       fail-fast: false
@@ -68,6 +69,7 @@ jobs:
           compression-level: 0
 
   windows:
+    if: ${{ !contains(github.event.head_commit.message, '[mac-validation-only]') }}
     name: Windows regression tests
     runs-on: windows-2025
     timeout-minutes: 45

@@ -8,7 +8,7 @@
   ],
   "files": {
     ".gitattributes": "02fa0931f6b36a548ede208b6bf7a6ebf75f92969d3225af090688736a363696",
-    ".github/workflows/macos.yml": "c903e053e93cb56b9f0b5ae03f6cdc432fc7980fcf12a877c4bef71dd3bfee0f",
+    ".github/workflows/macos.yml": "49c43b2431d9fa8ecfe95eddc9c37bf26141ae1546cb4f3bbba6bb11909cb312",
     ".gitignore": "5516dd0b260988d85a46b65b38df6022337100dc8ad33c4122c90d3d5ba4336e",
     "Install-Usage-Monitor.cmd": "7b228b543f56e683b3847774383e62167bd5fc2c631597766d57c975e59297d1",
     "LICENSE": "c89c62d53c22b015f48835fe8b27b06ff3684e820a0dd347a638626e8e25593f",
@@ -21,7 +21,7 @@
     "ci/macos_notices.py": "a5e2ab5b5d9ad509fa6572a379d4518d61554eb21c7d0d470a13e028a1da3a31",
     "ci/package-lock.json": "6d7064be5719af5445f595036a94f95482c811b260d8ca112dcc6d522de6542f",
     "ci/package.json": "566c33e8495757df489fe9436c1c02fc3cef50a39dafe8cdfa9a2771229ba04c",
-    "ci/run_python_tests.py": "4de1e65f75b7fb496e46e9f26e772210abcf3bcfaaa028744d19855f617c1dff",
+    "ci/run_python_tests.py": "649a9d64ab854f08cea72d365288381a18721caf7d4f686365ed0aac845746d9",
     "ci/windows_gate.py": "c5eb84cd1cd41beb5e040331fcca47e755ec501207822ad029eebebcb156389d",
     "install.ps1": "14a22476b0fc45d517d074a4e59ae21a3a740eddb293b7681d4b3f4aeabb3566",
     "usage-monitor/.gitattributes": "670a589ee6474969f69252a33249fcd53ee54bbf4466bc218daedd59578a2daf",
