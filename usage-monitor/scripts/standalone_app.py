@@ -73,6 +73,11 @@ def main(argv=None):
             print(json.dumps({'error': str(exc), 'modelCalls': 0, 'networkUsed': False}), file=sys.stderr)
             return 1
     parser = argparse.ArgumentParser(description=__doc__, allow_abbrev=False)
+    if sys.platform == 'darwin':
+        # Legacy Mac wrappers forward these switches. The bundled app already
+        # performs its normal first-use setup through the offline pipeline.
+        parser.add_argument('--setup', action='store_true', help=argparse.SUPPRESS)
+        parser.add_argument('--offline', action='store_true', help=argparse.SUPPRESS)
     for name, help_text in (
             ('config', 'Local settings file; default: this profile\'s usage-monitor settings folder.'),
             ('out', 'Dashboard folder; default: <settings folder>/dashboard on first use.'),

@@ -265,6 +265,37 @@ class MacPackageTests(unittest.TestCase):
                 self.assertEqual(standalone_app.main(['--export', str(output)]), 0)
         self.assertTrue(output.is_file())
 
+    def test_legacy_mac_wrapper_flags_keep_argument_validation_and_offline_pipeline(self):
+        import refresh_usage
+        import standalone_app
+        package = self.extract()
+        config = self.root / 'synthetic settings ü/settings.json'
+        with (patch.object(standalone_app, 'PACKAGE_ROOT', package),
+              patch.object(sys, 'path', list(sys.path)),
+              patch.object(refresh_usage, 'main', return_value=0) as refresh):
+            with patch.object(sys, 'platform', 'darwin'):
+                self.assertEqual(standalone_app.main(['--setup', '--offline', '--config', str(config),
+                                                      '--no-open', '--no-serve']), 0)
+                forwarded = refresh.call_args.args[0]
+                self.assertEqual(forwarded.count('--offline'), 1)
+                self.assertEqual(forwarded[forwarded.index('--config') + 1], str(config.resolve()))
+                self.assertNotIn('--setup', forwarded)
+                refresh.reset_mock()
+                with redirect_stdout(io.StringIO()), self.assertRaises(SystemExit) as helped:
+                    standalone_app.main(['--setup', '--offline', '--help'])
+                self.assertEqual(helped.exception.code, 0)
+                with patch.object(sys, 'stderr', io.StringIO()), self.assertRaises(SystemExit) as invalid:
+                    standalone_app.main(['--config', '--offline'])
+                self.assertEqual(invalid.exception.code, 2)
+                refresh.assert_not_called()
+            with patch.object(sys, 'platform', 'win32'):
+                with patch.object(sys, 'stderr', io.StringIO()), self.assertRaises(SystemExit) as rejected:
+                    standalone_app.main(['--setup', '--offline'])
+                self.assertEqual(rejected.exception.code, 2)
+                refresh.assert_not_called()
+        self.assertFalse(config.exists())
+        self.assertFalse((config.parent / 'dashboard').exists())
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -3,6 +3,12 @@ name: Mac packages and cross-platform tests
 on:
   push:
     branches: [feature/macos-packages]
+    paths:
+      - 'usage-monitor/**'
+      - 'ci/**'
+      - '.github/workflows/macos.yml'
+      - '!usage-monitor/Start-Usage-Monitor.command'
+      - '!usage-monitor/bundle-manifest.json'
   pull_request:
     branches: [main]
   workflow_dispatch:

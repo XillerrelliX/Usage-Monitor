@@ -149,6 +149,18 @@ class MacPublicPackageTests(unittest.TestCase):
         help_result = subprocess.run([str(self.launcher), '--help'], env=self.environment, capture_output=True, text=True)
         self.assertEqual(help_result.returncode, 0, help_result.stderr)
         self.assertIn('--codex-home', help_result.stdout)
+        for wrapper, arguments in (('setup.sh', ['--help']), ('refresh.sh', ['--offline', '--help'])):
+            command = ['/bin/sh', str(self.package / wrapper), *arguments]
+            result = subprocess.run(command, env=self.environment, cwd=self.root, capture_output=True,
+                                    text=True, encoding='utf-8', timeout=180)
+            self.invocations.append({'wrapper': wrapper, 'arguments': arguments, 'exitCode': result.returncode,
+                                     'stdout': result.stdout, 'stderr': result.stderr})
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn('--codex-home', result.stdout)
+        self.assertFalse(self.config.exists(), 'Wrapper help must not save a usage profile')
+        self.assertFalse(self.out.exists(), 'Wrapper help must not generate or scan usage')
+        for directory in ('.cargo', '.rustup', 'Library/Application Support/codex-local-usage/runtime'):
+            self.assertFalse((self.profile / directory).exists(), 'Wrapper help provisioned a fallback runtime')
         injected = self.root / 'untrusted environment modules'
         injected.mkdir()
         marker = self.root / 'ENVIRONMENT_CODE_EXECUTED'
