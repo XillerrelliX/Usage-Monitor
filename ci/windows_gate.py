@@ -9,7 +9,7 @@ import shutil
 import subprocess
 import sys
 
-from common import Evidence, native_environment, pinned_input
+from common import Evidence, native_environment, pinned_input, test_temporary_environment
 
 
 def main():
@@ -34,6 +34,7 @@ def main():
         evidence.artifact('pythonInput', python)
         evidence.artifact('timezoneInput', timezone)
         env = native_environment(engine, python, timezone)
+        env.update(test_temporary_environment(evidence, source))
         evidence.value['sourceCommit'] = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
         evidence.run('python-full-discovery', [sys.executable, '-B', '-X', 'utf8', Path(__file__).with_name('run_python_tests.py'),
                      '--source-root', source, '--output', evidence.directory / 'python-tests.json'], env=env, timeout=1800)

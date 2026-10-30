@@ -11,7 +11,7 @@ import shutil
 import subprocess
 import sys
 
-from common import Evidence, native_environment, pinned_input, write_json
+from common import Evidence, native_environment, pinned_input, test_temporary_environment, write_json
 
 
 def rust_cases(output):
@@ -61,7 +61,9 @@ def main():
         evidence.run('node-version', [node, '--version'])
         evidence.run('zstd-version', [zstd, '--version'])
         target = evidence.directory / 'cargo-target'
+        temporary_environment = test_temporary_environment(evidence, source)
         env = dict(os.environ, CARGO_TARGET_DIR=str(target), PYTHONDONTWRITEBYTECODE='1', PYTHONUTF8='1')
+        env.update(temporary_environment)
         native = source / 'native'
         cargo = ['cargo', '--locked', '--manifest-path', str(native / 'Cargo.toml')]
         evidence.run('native-source-hashes', [sys.executable, '-B', native / 'verify_sources.py'], env=env)
@@ -104,6 +106,7 @@ def main():
         for index, directory in enumerate(generated):
             evidence.run(f'native-generated-hashes-{index}', [sys.executable, '-B', native / 'verify_sources.py', '--generated-dir', directory], env=env)
         env.update(native_environment(engine, python, timezone))
+        env.update(temporary_environment)
         env['CARGO_TARGET_DIR'] = str(target)
         evidence.run('python-full-discovery', [sys.executable, '-B', '-X', 'utf8', Path(__file__).with_name('run_python_tests.py'),
                      '--source-root', source, '--output', evidence.directory / 'python-tests.json'], env=env)

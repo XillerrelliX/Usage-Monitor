@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import tempfile
 import time
 import zipfile
 from urllib.request import Request, urlopen
@@ -128,3 +129,18 @@ def native_environment(engine, python_archive, timezone_wheel):
                CODEX_USAGE_TEST_TZDATA_WHEEL=str(timezone_wheel), PYTHONDONTWRITEBYTECODE='1', PYTHONUTF8='1')
     env['PYTHONPATH'] = str(timezone_wheel) + (os.pathsep + env['PYTHONPATH'] if env.get('PYTHONPATH') else '')
     return env
+
+
+def test_temporary_environment(evidence, source):
+    """Give fresh test processes canonical, short, owned temporary paths."""
+    base = Path(os.environ.get('RUNNER_TEMP') or evidence.directory).resolve()
+    base.mkdir(parents=True, exist_ok=True)
+    directory = Path(tempfile.mkdtemp(prefix='umt-', dir=base)).resolve()
+    if directory.is_relative_to(Path(source).resolve()):
+        raise ValueError('Keep synthetic temporary fixtures outside the public source package')
+    environment = {name: str(directory) for name in ('TMPDIR', 'TEMP', 'TMP')}
+    evidence.value['testTemporaryDirectory'] = {
+        'path': str(directory), 'environment': environment,
+        'reason': 'Canonical paths avoid macOS /var aliases and short Windows paths avoid fixture MAX_PATH failures.'}
+    evidence.save()
+    return environment
